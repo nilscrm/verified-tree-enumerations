@@ -612,12 +612,6 @@ proof (rule ccontr)
   then show False using connected_components_partition_on_V C_conn_comp unfolding partition_on_def by blast
 qed
 
-lemma (in connected_ulgraph) connected_components_remove_vertex:
-  assumes "v \<in> V"
-    and "remove_vertex v = (V',E')"
-  shows "ulgraph.connected_components V' E' = ulgraph.connected_component_of V' E' ` neighborhood v"
-  sorry
-
 lemma (in connected_ulgraph) exists_adj_vert_removed:
   assumes "v \<in> V"
     and remove_vertex: "remove_vertex v = (V',E')"
@@ -967,9 +961,6 @@ proof-
   show ?thesis using g.is_walk_def g.walk_length_def by (unfold_locales, auto simp: g.is_connected_set_singleton g.is_cycle2_def g.is_cycle_alt)
 qed
 
-(*fun app_graph_isomorphism :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a pregraph \<Rightarrow> 'b pregraph" where
-  "app_graph_isomorphism f (V,E) = (f ` V, (\<lambda>e. f ` e) ` E)"*)
-
 locale graph_isomorphism =
   G: graph_system V\<^sub>G E\<^sub>G for V\<^sub>G E\<^sub>G +
   fixes V\<^sub>H E\<^sub>H f
@@ -1013,11 +1004,6 @@ lemma (in graph_system) graph_isomorphism_id: "graph_isomorphism V E V E id"
 lemma (in graph_system) graph_isomorph_refl: "(V,E) \<simeq> (V,E)"
   using graph_isomorphism_id by auto
 
-(*context graph_isomorphism
-begin
-interpretation inv: graph_isomorphism V\<^sub>H E\<^sub>H V\<^sub>G E\<^sub>G "the_inv_into V\<^sub>G f" using graph_isomorphism_inv .
-end*)
-
 lemma graph_isomorph_sym: "symp (\<simeq>)"
   using graph_isomorphism.graph_isomorphism_inv unfolding symp_def by fastforce
 
@@ -1026,81 +1012,5 @@ lemma graph_isomorphism_trans: "graph_isomorphism V\<^sub>G E\<^sub>G V\<^sub>H 
 
 lemma graph_isomorph_trans: "transp (\<simeq>)"
   using graph_isomorphism_trans unfolding transp_def by fastforce
-
-(*
-fun graph_isomorphism :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a pregraph \<Rightarrow> 'b pregraph \<Rightarrow> bool" where
-  "graph_isomorphism f (V\<^sub>G,E\<^sub>G) (V\<^sub>H,E\<^sub>H) \<longleftrightarrow> bij_betw f V\<^sub>G V\<^sub>H \<and> (\<lambda>e. f ` e) ` E\<^sub>G = E\<^sub>H"
-
-(*fun graph_isomorphism :: "'a pregraph \<Rightarrow> 'b pregraph \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool" where
-  "graph_isomorphism (V\<^sub>G,E\<^sub>G) (V\<^sub>H,E\<^sub>H) f \<longleftrightarrow> bij_betw f V\<^sub>G V\<^sub>H \<and> (\<forall>e \<subseteq> V\<^sub>G. e \<in> E\<^sub>G \<longleftrightarrow> f ` e \<in> E\<^sub>H)"*)
-
-definition graph_isomorph :: "'a pregraph \<Rightarrow> 'b pregraph \<Rightarrow> bool" (infix "\<simeq>" 50) where
-  "G \<simeq> H = (\<exists>f. graph_isomorphism f G H f)"
-
-lemma graph_isomorphism_id: "graph_isomorphism G G id"
-  by (cases G) simp
-
-lemma graph_isomorph_refl: "G \<simeq> G"
-  using graph_isomorphism_id unfolding graph_isomorph_def by blast
-
-lemma graph_isomorphism_inv: "graph_isomorphism (V\<^sub>G,E\<^sub>G) (V\<^sub>H,E\<^sub>H) f \<Longrightarrow> graph_isomorphism (V\<^sub>H,E\<^sub>H) (V\<^sub>G,E\<^sub>G) (the_inv_into V\<^sub>G f)" using bij_betw_the_inv_into apply auto 
-   apply (smt (verit) bij_betw_imp_inj_on bij_betw_imp_surj_on bij_betw_subset f_the_inv_into_f image_cong image_mono image_subset_iff the_inv_into_onto)
-  by (smt (verit) bij_betw_imp_inj_on bij_betw_imp_surj_on bij_betw_subset f_the_inv_into_f image_cong image_mono image_subset_iff the_inv_into_onto)
-
-lemma graph_isomorph_sym: "symp (\<simeq>)"
-  using graph_isomorphism_inv unfolding graph_isomorph_def symp_def by fast
-
-lemma graph_isomorphism_trans: "graph_isomorphism G H f \<Longrightarrow> graph_isomorphism H F g \<Longrightarrow> graph_isomorphism G F (g o f)"
-  by (cases G, cases H, cases F) (simp, metis bij_betw_trans bij_betw_imp_surj_on image_image image_mono)
-
-lemma graph_isomorph_trans: "transp (\<simeq>)"
-  using graph_isomorphism_trans unfolding graph_isomorph_def transp_def by blast
-
-lemma graph_isomorph_equiv: "equivp (\<simeq>)"
-  using graph_isomorph_refl graph_isomorph_sym graph_isomorph_trans equivpI reflpI by blast
-
-lemma "graph_isomorphism (V\<^sub>G,E\<^sub>G) (V\<^sub>H,E\<^sub>H) f \<longleftrightarrow> inj_on f V\<^sub>G \<and> app_graph_isomorphism f (V\<^sub>G,E\<^sub>G) = (V\<^sub>H,E\<^sub>H)" nitpick
-*)
-
-(*text \<open>Use locale for graph isomorphism since basic properties (like symmetry) rely on the
-  wellformedness of the edges.\<close>
-
-locale graph_isomorphism =
-  G: graph_system V\<^sub>G E\<^sub>G +
-  H: graph_system V\<^sub>H E\<^sub>H for V\<^sub>G E\<^sub>G V\<^sub>H E\<^sub>H +
-  fixes f
-  assumes bij_f: "bij_betw f V\<^sub>G V\<^sub>H"
-    and edge_preserving: "(\<lambda>e. f ` e) ` E\<^sub>G = E\<^sub>H"
-
-locale graph_isomorph =
-  G: graph_system V\<^sub>G E\<^sub>G +
-  H: graph_system V\<^sub>H E\<^sub>H for V\<^sub>G E\<^sub>G V\<^sub>H E\<^sub>H +
-  assumes "\<exists>f. graph_isomorphism V\<^sub>G E\<^sub>G V\<^sub>H E\<^sub>H f"
-
-lemma graph_isomorphism_id: "graph_isomorphism (V,E) (V,E) id"
-  by simp
-
-context graph_system
-
-interpretation (in graph_system) graph_isomorphism_id: 
-
-fun graph_isomorphism :: "'a pregraph \<Rightarrow> 'b pregraph \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool" where
-  "graph_isomorphism (V\<^sub>G,E\<^sub>G) (V\<^sub>H,E\<^sub>H) f \<longleftrightarrow> bij_betw f V\<^sub>G V\<^sub>H \<and> (\<lambda>e. f ` e) ` E\<^sub>G = E\<^sub>H"
-
-definition graph_isomorph :: "'a pregraph \<Rightarrow> 'b pregraph \<Rightarrow> bool" where
-  "graph_isomorph G H \<longleftrightarrow> (\<exists>f. graph_isomorphism G H f)"
-
-lemma graph_isomorph_refl: "graph_isomorph G G"
-  using graph_isomorphism_id unfolding graph_isomorph_def by (cases G) blast
-
-lemma "bij_betw f A B \<Longrightarrow> \<exists>g. bij_betw g B A" using bij_betw_the_inv_into by blast
-
-lemma "graph_isomorphism (V\<^sub>G,E\<^sub>G) (V\<^sub>H,E\<^sub>H) f \<Longrightarrow> graph_isomorphism (V\<^sub>H,E\<^sub>H) (V\<^sub>G,E\<^sub>G) (the_inv_into V\<^sub>G f)" nitpick using bij_betw_the_inv_into apply simp
-
-lemma graph_ismorphism_inv: "graph_isomorphism G H f \<Longrightarrow> graph_isomorphism H G (inv f)"
-  apply (cases G) apply (cases H) apply auto 
-
-lemma graph_isomorph_sym: "symp graph_isomorph" unfolding symp_def
-*)
 
 end

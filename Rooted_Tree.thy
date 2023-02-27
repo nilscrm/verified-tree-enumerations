@@ -21,12 +21,6 @@ lemma tree_rev_exhaust[case_names Nil Snoc]:
   "(t = Node [] \<Longrightarrow> P) \<Longrightarrow> (\<And>ts r. t = Node (ts @ [r]) \<Longrightarrow> P) \<Longrightarrow> P"
   by (cases t) (metis rev_exhaust)
 
-(*lemma tree_induct:
-  assumes "P (Node [])"
-    and "\<And>ts. (\<forall>t\<in>set ts. P t) \<Longrightarrow> P (Node ts)"
-  shows "P t"
-  using assms by (induction) auto*)
-
 lemma tree_cons_induct[case_names Nil Cons]:
   assumes "P (Node [])"
     and "\<And>t ts. P t \<Longrightarrow> P (Node ts) \<Longrightarrow> P (Node (t#ts))"
@@ -35,9 +29,6 @@ proof (induction "size_tree t" arbitrary: t rule: less_induct)
   case less
   then show ?case using assms by (cases t rule: tree_cons_exhaust) auto
 qed
-
-(*lemma height_fold [code]: "height (Node (t#ts)) = Suc (fold max (map height ts) (height t))"
-  using Max.set_eq_fold by (metis height.simps(2) list.set_map map_eq_Cons_conv)*)
 
 fun lexord_tree where
   "lexord_tree t (Node []) \<longleftrightarrow> False"
@@ -236,11 +227,6 @@ lemma tree_less_nested: "t < Node [t]"
 lemma tree_le_nested: "t \<le> Node [t]"
   unfolding tree_le_def using tree_less_nested by auto
 
-(*lemma lexord_tree_iff: "lexord_tree (Node ts) (Node rs) \<longleftrightarrow> ((\<exists>ts' t ss rs' r. ts = ss @ t # ts' \<and> rs = ss @ r # rs' \<and> lexord_tree t r) \<or> (\<exists>rs'. rs' \<noteq> [] \<and> rs = ts @ rs'))"
-  by (induction "Node ts" "Node rs" arbitrary: ts rs rule: lexord_tree.induct)
-   (auto, blast, blast, blast, metis append_Cons, metis append_Cons, metis hd_append list.sel(1),
-     blast, metis hd_append list.sel(1), blast, metis hd_append list.sel(1), metis lexord_tree.simps(3) lexord_tree_comm_prefix)*)
-
 lemma lexord_tree_iff:
   "lexord_tree t r \<longleftrightarrow> (\<exists>ts t' ss rs r'. t = Node (ss @ t' # ts) \<and> r = Node (ss @ r' # rs) \<and> lexord_tree t' r') \<or> (\<exists>ts rs. rs \<noteq> [] \<and> t = Node ts \<and> r = Node (ts @ rs))" (is "?l \<longleftrightarrow> ?r")
 proof
@@ -289,7 +275,6 @@ next
           metis Cons_eq_appendI less_tree_comm_suffix order.strict_implies_order tree_le_snoc2_iff)
   qed
 qed
-
 
 
 fun regular :: "tree \<Rightarrow> bool" where
@@ -392,12 +377,6 @@ end
 fun rgraph_isomorph :: "'a rpregraph \<Rightarrow> 'b rpregraph \<Rightarrow> bool" (infix "\<simeq>\<^sub>r" 50) where
   "(V\<^sub>G,E\<^sub>G,r\<^sub>G) \<simeq>\<^sub>r (V\<^sub>H,E\<^sub>H,r\<^sub>H) \<longleftrightarrow> (\<exists>f. rgraph_isomorphism V\<^sub>G E\<^sub>G r\<^sub>G V\<^sub>H E\<^sub>H r\<^sub>H f)"
 
-(*fun rgraph_isomorphism :: "'a rpregraph \<Rightarrow> 'b rpregraph \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool" where
-  "rgraph_isomorphism (V\<^sub>G,E\<^sub>G,r\<^sub>G) (V\<^sub>H,E\<^sub>H,r\<^sub>H) f \<longleftrightarrow> f r\<^sub>G = r\<^sub>H \<and> graph_isomorphism (V\<^sub>G,E\<^sub>G) (V\<^sub>H,E\<^sub>H) f"
-
-definition rgraph_isomorph :: "'a rpregraph \<Rightarrow> 'b rpregraph \<Rightarrow> bool" (infix "\<simeq>\<^sub>r" 50) where
-  "rgraph_isomorph G H \<longleftrightarrow> (\<exists>f. rgraph_isomorphism G H f)"*)
-
 lemma (in rgraph) rgraph_isomorphism_id: "rgraph_isomorphism V E r V E r id"
   using graph_isomorphism_id rgraph_isomorphism.intro rgraph_axioms
   unfolding rgraph_isomorphism_axioms_def by fastforce
@@ -454,9 +433,6 @@ fun tree_ltree :: "'a ltree \<Rightarrow> tree" where
 fun regular_ltree :: "'a ltree \<Rightarrow> bool" where
   "regular_ltree (LNode r ts) \<longleftrightarrow> sorted_wrt (\<lambda>t s. tree_ltree t \<le> tree_ltree s) ts \<and> (\<forall>t\<in>set ts. regular_ltree t)"
 
-(*fun normalize_ltree :: "'a ltree \<Rightarrow> 'a ltree" where
-  "normalize_ltree (LNode r ts) = LNode r (sort_key tree_ltree (map normalize_ltree ts))"*)
-
 datatype 'a stree = SNode 'a "'a stree fset"
 
 lemma stree_size_child_lt[termination_simp]: "t |\<in>| ts \<Longrightarrow> size t < Suc (\<Sum>s\<in>fset ts. Suc (size s))"
@@ -486,9 +462,6 @@ fun distinct_stree_nodes :: "'a stree \<Rightarrow> bool" where
 fun ltree_stree :: "'a stree \<Rightarrow> 'a ltree" where
   "ltree_stree (SNode r ts) = LNode r (SOME xs. fset_of_list xs = ltree_stree |`| ts \<and> distinct xs \<and> sorted_wrt (\<lambda>t s. tree_ltree t \<le> tree_ltree s) xs)"
 
-(*fun ltree_stree :: "'a stree \<Rightarrow> 'a ltree" where
-  "ltree_stree (SNode r ts) = LNode r (SOME xs. fset_of_list xs = ltree_stree |`| ts \<and> distinct xs)"*)
-
 fun stree_ltree :: "'a ltree \<Rightarrow> 'a stree" where
   "stree_ltree (LNode r ts) = SNode r (fset_of_list (map stree_ltree ts))"
 
@@ -515,9 +488,6 @@ proof (relation "measure (\<lambda>p. card (fst p))", auto)
   have "card V' < card V" using remove_vertex root_wf finV card_Diff1_less unfolding remove_vertex_def by fast
   then show "card S < card V" using card_C_V' by simp
 qed
-
-(*text \<open>Delete simplification rule since it loops indefinitely.\<close>
-declare stree_of_graph.simps[simp del]*)
 
 definition tree_graph :: "tree \<Rightarrow> nat rpregraph" where
   "tree_graph t = tree_graph_stree (stree_ltree (postorder_label t))"
@@ -993,27 +963,6 @@ qed
 lemma disintct_nodes_ltree_stree: "distinct_stree_nodes t \<Longrightarrow> distinct_ltree_nodes (ltree_stree t)"
   using distinct_ltree_stree_subtrees by (induction t) (auto simp: disjoint_family_on_def, metis disjoint_iff)
 
-(*lemma nodes_normalize_ltree[simp]: "nodes_ltree (normalize_ltree t) = nodes_ltree t"
-  by (induction t) auto
-
-lemma distinct_nodes_normalize_ltree[simp]: "distinct_ltree_nodes t \<Longrightarrow> distinct_ltree_nodes (normalize_ltree t)"
-  apply (induction t) apply (auto simp: disjoint_family_on_def)
-
-lemma "distinct_stree_nodes t \<Longrightarrow> distinct_ltree_nodes (normalize_ltree (ltree_stree t))"
-proof (induction t)
-  case (SNode r ts)
-  let ?xs = "SOME xs. fset_of_list xs = ltree_stree |`| ts \<and> distinct xs"
-  have set_xs: "set ?xs = ltree_stree ` fset ts"
-    by (metis (mono_tags, lifting) fimage.rep_eq finite_distinct_list finite_fset fset_cong fset_of_list.rep_eq someI_ex)
-  have "distinct ?xs"
-    by (metis (mono_tags, lifting) finite_distinct_list finite_fset fset_cong fset_of_list.rep_eq someI_ex)
-  then show ?case using SNode set_xs apply auto
-qed
-
-lemma stree_ltree_normalize_ltree[simp]: "stree_ltree (normalize_ltree t) = stree_ltree t"
-  by (induction t) (simp, metis (no_types, lifting) fimage_fimage fset.map_cong fset_of_list.abs_eq
-      fset_of_list_elem fset_of_list_map notin_fset set_sort)*)
-
 lemma (in rtree) tree_graph_tree_of_graph: "tree_graph (tree_ltree (ltree_stree (stree_of_graph (V,E,r)))) \<simeq>\<^sub>r (V,E,r)"
 proof-
   define t where "t = (V,E,r)"
@@ -1058,15 +1007,8 @@ lemma ltree_size_ltree_stree[simp]: "ltree_size (ltree_stree t) = stree_size t"
   using inj_ltree_stree by (induction t) (auto simp: sum_list_distinct_conv_sum_set[OF distinct_ltree_stree_subtrees] fsum.F.rep_eq,
       smt (verit, best) inj_on_def stree_ltree_stree sum.reindex_cong)
 
-(*lemma ltree_size_normalize_ltree[simp]: "ltree_size (normalize_ltree t) = ltree_size t"
-  by (induction t) (auto, simp only: sum_mset_sum_list[symmetric], simp, metis (mono_tags, lifting) map_eq_conv)*)
-
 lemma tree_size_tree_ltree[simp]: "tree_size (tree_ltree t) = ltree_size t"
   by (induction t) (auto, metis comp_eq_dest_lhs map_cong)
-
-
-(*lemma regular_nomalize_ltree: "regular_ltree (normalize_ltree t)"
-  using sorted_map sorted_sort_key by (induction t, auto, blast)*)
 
 lemma regular_ltree_stree: "regular_ltree (ltree_stree t)"
   using sorted_wrt_ltree_stree_subtrees by (induction t) auto
@@ -1083,111 +1025,6 @@ qed
 
 lemma (in rtree) ex_regular_n_tree: "\<exists>t\<in>regular_n_trees (card V). tree_graph t \<simeq>\<^sub>r (V,E,r)"
   using tree_graph_tree_of_graph tree_of_graph_regular_n_tree by blast
-
-text \<open>tree_graph is injective with respect to isomorphism\<close>
-
-(*lemma app_rgraph_isomorphism_relabel_stree: "app_rgraph_isomorphism f (tree_graph_stree t) = tree_graph_stree (relabel_stree f t)"
-  unfolding tree_graph_stree_def by simp
-
-lemma (in rtree) app_rgraph_isomorphism_isomorph:
-  assumes inj: "inj_on f V"
-  shows "app_rgraph_isomorphism f (V,E,r) \<simeq>\<^sub>r (V,E,r)"
-proof-
-  obtain V' E' r' where app_iso: "app_rgraph_isomorphism f (V,E,r) = (V',E',r')" by auto
-  then have "rgraph_isomorphism V E r V' E' r' f" using inj bij_betw_def by unfold_locales auto
-  then show ?thesis unfolding app_iso using rgraph_isomorph_sym by fastforce
-qed
-
-lemma stree_iso_impl_graph_iso:
-  assumes distinct_nodes: "distinct_nodes t"
-    and inj: "inj_on f (nodes_stree t)"
-  shows "tree_graph_stree (relabel_stree f t) \<simeq>\<^sub>r tree_graph_stree t"
-proof-
-  obtain V E r where tree_graph_stree_t: "tree_graph_stree t = (V,E,r)" unfolding tree_graph_stree_def by blast
-  then interpret rtree V E r using distinct_nodes rtree_tree_graph_stree by fast
-  show ?thesis using inj app_rgraph_isomorphism_relabel_stree app_rgraph_isomorphism_isomorph tree_graph_stree_t
-    unfolding tree_graph_stree_def by auto
-qed
-
-
-(*fun postorder_relabeling :: "nat \<Rightarrow> 'a stree \<Rightarrow> nat \<times> ('a \<Rightarrow> nat)" where
-  "postorder_label_aux n (Node []) = (n, SNode n {||})"
-| "postorder_label_aux n (Node (t#ts)) =
-  (let (n', t') = postorder_label_aux n t in
-    case postorder_label_aux (Suc n') (Node ts) of
-      (n'', SNode r ts') \<Rightarrow> (n'', SNode r (finsert t' ts')))"
-
-definition postorder_label :: "tree \<Rightarrow> nat stree" where
-  "postorder_label t = snd (postorder_label_aux 0 t)"*)
-
-lemma sorted_list_of_multiset_eq_iff[simp]: "sorted_list_of_multiset A = sorted_list_of_multiset B \<longleftrightarrow> A = B"
-  by (auto, metis mset_sorted_list_of_multiset)
-
-lemma "tree_stree t1 = tree_stree t2 \<Longrightarrow> \<exists>f. relabel_stree f t1 = t2"
-proof-
-  assume tree_stree_eq: "tree_stree t1 = tree_stree t2"
-  obtain r1 ts1 where t1: "t1 = SNode r1 ts1" using stree.exhaust by blast
-  obtain r2 ts2 where t2: "t2 = SNode r2 ts2" using stree.exhaust by blast
-  show ?thesis
-    using tree_stree_eq unfolding t1 t2
-  proof (induction ts1 arbitrary: r2 ts2)
-    case empty
-    then have "sorted_list_of_multiset (image_mset tree_stree (mset_set (fset ts2))) = []" by simp
-    then have "fset ts2 = {}" using sorted_list_of_multiset_eq_Nil by (simp add: mset_set_empty_iff)
-    then show ?case by (auto simp: fmember.rep_eq)
-  next
-    case (insert t1 ts1)
-    then have "t1 \<notin> fset ts1" using notin_fset by metis
-    then obtain t2 where "t2 \<in> fset ts2" "tree_stree t1 = tree_stree t2" using insert(3) apply (auto simp: insert)
-    then show ?case apply simp
-  qed
-qed
-proof (induction t1 arbitrary: t2)
-  case (SNode r1 ts1)
-  obtain r2 ts2 where t2: "t2 = SNode r2 ts2" using stree.exhaust by blast
-  have "image_mset tree_stree (mset_set (fset ts1)) = image_mset tree_stree (mset_set (fset ts2))" sorry
-  then show ?case using SNode unfolding t2 apply simp 
-qed
-
-lemma postorder_label_aux_tree_stree_iso: "distinct_nodes t \<Longrightarrow> \<exists>f. inj_on f (nodes_stree t) \<and> relabel_stree f (snd (postorder_label_aux n (tree_stree t))) = t"
-  apply
-
-lemma "distinct_nodes t \<Longrightarrow> \<exists>f. inj_on f (nodes_stree t) \<and> relabel_stree f (postorder_label (tree_stree t)) = t"
-  using postorder_label_aux_tree_stree_iso unfolding postorder_label_def by simp
-
-lemma (in rtree) "tree_graph (tree_stree (stree_of_graph (V,E,r))) \<simeq>\<^sub>r (V,E,r)"
-  unfolding tree_graph_def
-
-
-lemma (in rtree) ex_regular_stree: "\<exists>t. t \<in> n_strees (card V) \<and> tree_graph_stree t \<simeq>\<^sub>r (V,E,r)"
-proof-
-  define t where "t = stree_of_graph (V,E,r)"
-  have isomorph: "rgraph_isomorph (tree_graph_stree t) (V,E,r)" unfolding t_def using rgraph_isomorph_refl by simp
-  have regular: "t \<in> n_strees (card V)" unfolding n_strees_def t_def using stree_size_stree_of_graph by blast
-  \<comment> \<open>I don't know why this proof is not working\<close>
-  show ?thesis using exI[of "\<lambda>t. t \<in> n_strees (card V) \<and> tree_graph_stree t \<simeq>\<^sub>r (V,E,r)" t, OF conjI[OF regular isomorph]] sorry
-qed
-
-lemma "distinct_nodes lt \<Longrightarrow> lt \<in> n_strees n \<Longrightarrow> \<exists>t f. t \<in> regular_n_trees n \<and> relabel_stree f (snd (postorder_label_aux k t)) = lt"
-proof (induction lt arbitrary: n k)
-  case (SNode r ts)
-  have "\<forall>s\<in>fset ts. \<exists>n'. s \<in> n_strees n'" using SNode(3) unfolding n_strees_def by blast
-  then show ?case using SNode apply auto
-qed oops
-
-lemma "distinct_nodes lt \<Longrightarrow> lt \<in> n_strees n \<Longrightarrow> \<exists>t f. t \<in> regular_n_trees n \<and> relabel_stree f (postorder_label t) = lt"
-  sorry
-
-lemma (in rtree) ex_regular_tree: "\<exists>t\<in>regular_n_trees (card V). tree_graph t \<simeq>\<^sub>r (V,E,r)"
-  using rtree_axioms
-proof (induction "card V" arbitrary: V E r rule: less_induct)
-  case less
-  then interpret t: rtree vertices edges r
-  
-  then show ?case sorry
-qed oops
-
-*)
 
 subsection "Injectivity with respect to isomorphism"
 
@@ -1449,463 +1286,5 @@ proof-
   have "tree_graph t1 \<simeq>\<^sub>r tree_graph t2" using tree_graph_eq g rgraph_isomorph_refl by simp
   then show ?thesis using tree_graph_inj_iso regular_t1 regular_t2 by simp
 qed
-
-(*lemma ltree_stree_ltree: "distinct_ltree_nodes t \<Longrightarrow> ltree_stree (stree_ltree t) = t"
-proof (induction t)
-  case (LNode r ts)
-  then show ?case apply auto
-qed
-
-lemma
-  assumes "relabel_stree f (stree_ltree t1) = (stree_ltree t2)"
-    and distinct_t1: "distinct_ltree_nodes t1"
-    and distinct_t2: "distinct_ltree_nodes t2"
-  shows "relabel_ltree f t1 = t2"
-  using assms relabel_stree_stree_ltree ltree_stree_ltree sorry*)
-
-(*
-
-lemma tree_stree_postorder_label_aux: "regular t \<Longrightarrow> tree_ltree (snd (postorder_label_aux n t)) = t"
-proof (induction t rule: postorder_label_aux.induct)
-  case (1 n)
-  then show ?case by auto
-next
-  case (2 n t ts)
-  obtain n' t' where nt': "postorder_label_aux n t = (n', t')" by fastforce
-  obtain n'' r ts' where nt'': "postorder_label_aux (Suc n') (Node ts) = (n'', LNode r ts')"
-    using ltree.exhaust prod.exhaust by metis
-  have "t' \<notin> set ts'" using nodes_postorder_label_aux_le[OF nt'] nodes_postorder_label_aux_ge[OF nt'']
-    by (auto, meson not_less_eq_eq root_ltree_wf)
-  then show ?case using 2 nt' nt'' by (auto simp: insort_is_Cons)
-qed
-
-lemma tree_stree_postorder_label[simp]: "regular t \<Longrightarrow> tree_ltree (postorder_label t) = t"
-  using tree_stree_postorder_label_aux unfolding postorder_label_def by blast
-
-lemma inj_relabel_subtrees:
-  assumes distinct_nodes: "distinct_stree_nodes (SNode r ts)"
-    and inj_on_nodes: "inj_on f (nodes_stree (SNode r ts))"
-  shows "inj_on (relabel_stree f) (fset ts)"
-proof
-  fix t1 t2
-  assume t1_subtree: "t1 \<in> fset ts"
-    and t2_subtree: "t2 \<in> fset ts"
-    and relabel_eq: "relabel_stree f t1 = relabel_stree f t2"
-  then have "nodes_stree (relabel_stree f t1) = nodes_stree (relabel_stree f t2)" by simp
-  then have "f ` nodes_stree t1 = f ` nodes_stree t2" by simp
-  then have "nodes_stree t1 = nodes_stree t2" using inj_on_nodes t1_subtree t2_subtree inj_on_image[of f "nodes_stree ` fset ts"]
-    by (simp, meson image_eqI inj_onD)
-  then show "t1 = t2" using distinct_nodes nodes_stree_non_empty t1_subtree t2_subtree
-    by (auto simp add: disjoint_family_on_def, force)
-qed
-
-lemma inj_on_subtree: "inj_on f (nodes_stree (SNode r ts)) \<Longrightarrow> t \<in> fset ts \<Longrightarrow> inj_on f (nodes_stree t)"
-  unfolding inj_on_def by simp
-
-lemma tree_stree_relabel_stree: "distinct_nodes t \<Longrightarrow> inj_on f (nodes_stree t) \<Longrightarrow> tree_stree (relabel_stree f t) = tree_stree t"
-proof (induction t)
-  case (SNode r ts)
-  then have IH: "\<forall>t\<in># mset_set (fset ts). tree_stree (relabel_stree f t) = tree_stree t"
-    using inj_on_subtree[OF SNode(3)] elem_mset_set finite_fset by auto
-  show ?case using inj_relabel_subtrees[OF SNode(2) SNode(3)]
-    by (auto simp add: mset_set_image_inj, metis IH image_mset_cong)
-qed
-
-lemma tree_stree_relabel_stree_postorder_label: "regular t \<Longrightarrow> inj_on f (nodes_stree (postorder_label t)) \<Longrightarrow> tree_stree (relabel_stree f (postorder_label t)) = t"
-  using tree_stree_relabel_stree distinct_nodes_postorder_label by fastforce
-
-lemma postorder_label_inj: "regular t1 \<Longrightarrow> regular t2 \<Longrightarrow> inj_on f (nodes_stree (postorder_label t1)) \<Longrightarrow> relabel_stree f (postorder_label t1) = postorder_label t2 \<Longrightarrow> t1 = t2"
-  using tree_stree_relabel_stree_postorder_label by fastforce
-
-lemma tree_graph_inj: "regular t1 \<Longrightarrow> regular t2 \<Longrightarrow> tree_graph t1 \<simeq>\<^sub>r tree_graph t2 \<Longrightarrow> t1 = t2"
-  using postorder_label_inj tree_graphs_iso_strees_iso distinct_nodes_postorder_label
-  unfolding tree_graph_def by blast
-*)
-
-
-text \<open>This was the first attempt with lists instead of fsets in the labeled tree data type.\<close>
-
-(*
-subsection \<open>Labeled trees\<close>
-
-datatype 'a stree = SNode 'a "'a stree list"
-
-fun tree_of_stree :: "'a stree \<Rightarrow> tree" where
-  "tree_of_stree (SNode a ts) = Node (map tree_of_stree ts)"
-
-definition regular_stree :: "'a stree \<Rightarrow> bool" where
-  "regular_stree t = regular (tree_of_stree t)"
-
-fun stree_size :: "'a stree \<Rightarrow> nat" where
-  "stree_size (SNode r ts) = Suc (\<Sum>t\<leftarrow>ts. stree_size t)"
-
-definition n_strees :: "nat \<Rightarrow> 'a stree set" where
-  "n_strees n = {t. stree_size t = n}"
-
-definition regular_n_strees :: "nat \<Rightarrow> 'a stree set" where
-  "regular_n_strees n = {t\<in>n_strees n. regular_stree t}"
-
-fun root :: "'a stree \<Rightarrow> 'a" where
-  "root (SNode a ts) = a"
-
-fun nodes_stree :: "'a stree \<Rightarrow> 'a set" where
-  "nodes_stree (SNode a ts) = {a} \<union> (\<Union>t\<in>set ts. nodes_stree t)"
-
-fun tree_graph_edges :: "'a stree \<Rightarrow> 'a edge set" where
-  "tree_graph_edges (SNode a ts) = ((\<lambda>t. {a, root t}) ` set ts) \<union> (\<Union>t\<in>set ts. tree_graph_edges t)"
-
-fun distinct_nodes :: "'a stree \<Rightarrow> bool" where
-  "distinct_nodes (SNode a ts) \<longleftrightarrow> (\<forall>t\<in>set ts. a \<notin> nodes_stree t) \<and> disjoint_family_on nodes_stree (set ts) \<and> (\<forall>t\<in>set ts. distinct_nodes t)"
-
-
-fun postorder_label_aux :: "nat \<Rightarrow> tree \<Rightarrow> nat \<times> nat stree" where
-  "postorder_label_aux n (Node []) = (n, SNode n [])"
-| "postorder_label_aux n (Node (t#ts)) =
-  (let (n', t') = postorder_label_aux n t in
-    case postorder_label_aux (Suc n') (Node ts) of
-      (n'', SNode r ts') \<Rightarrow> (n'', SNode r (t'#ts')))"
-
-definition postorder_label :: "tree \<Rightarrow> nat stree" where
-  "postorder_label t = snd (postorder_label_aux 0 t)"
-
-definition tree_graph_stree :: "'a stree \<Rightarrow> 'a rpregraph" where
-  "tree_graph_stree t = (nodes_stree t, tree_graph_edges t, root t)"
-
-definition tree_graph :: "tree \<Rightarrow> nat rpregraph" where
-  "tree_graph t = tree_graph_stree (postorder_label t)"
-
-
-function stree_of_graph :: "'a set \<Rightarrow> 'a edge set \<Rightarrow> 'a \<Rightarrow> 'a stree" where
-  "stree_of_graph V E r =
-    (if \<not> rtree V E r then undefined else
-    (let (V', E') = graph_system.remove_vertex V E r;
-      Cs = SOME Cs. set Cs = ulgraph.connected_components V' E' \<and> distinct Cs
-    in SNode r (map (\<lambda>C. stree_of_graph C (graph_system.induced_edges E' C) (THE r'. r' \<in> C \<and> {r, r'} \<in> E)) Cs)))"
-  by pat_completeness auto
-
-termination
-proof (relation "measure (\<lambda>p. card (fst p))", auto)
-  fix r :: 'a and V :: "'a set" and E :: "'a edge set" and V' :: "'a set" and E' :: "'a edge set" and C :: "'a set"
-  assume rtree: "rtree V E r"
-  assume VE': "(V', E') = graph_system.remove_vertex V E r"
-  assume conn_component: "C \<in> set (SOME Cs. set Cs = ulgraph.connected_components V' E' \<and> distinct Cs)"
-  interpret rtree V E r using rtree .
-  interpret subg: subgraph V' E' V E using subgraph_remove_vertex VE' by simp
-  interpret g': fin_ulgraph V' E' using fin_ulgraph.intro subg.is_finite_subgraph fin_graph_system_axioms subg.is_subgraph_ulgraph ulgraph_axioms by blast
-  have Cs: "\<exists>Cs. set Cs = g'.connected_components \<and> distinct Cs" using g'.finite_connected_components finite_distinct_list by auto
-  have "C \<subseteq> V'" using conn_component g'.connected_component_wf someI_ex[OF Cs] by simp
-  then show "card C < card V" using VE' unfolding remove_vertex_def
-    by (simp, metis Diff_empty card_seteq linorder_not_less root_wf subset_Diff_insert finV)
-qed
-
-
-lemma root_wf: "root t \<in> nodes_stree t"
-  by (cases t rule: nodes_stree.cases) auto
-
-lemma tree_graph_edges_wf: "e \<in> tree_graph_edges t \<Longrightarrow> e \<subseteq> nodes_stree t"
-  using root_wf by (induction t rule: tree_graph_edges.induct) auto
-
-lemma card_tree_graph_edges_distinct: "distinct_nodes t \<Longrightarrow> e \<in> tree_graph_edges t \<Longrightarrow> card e = 2"
-  using root_wf card_2_iff by (induction t rule: tree_graph_edges.induct) (auto, fast+)
-
-lemma nodes_stree_non_empty: "nodes_stree t \<noteq> {}"
-  by (cases t rule: nodes_stree.cases) auto
-
-lemma finite_nodes_stree: "finite (nodes_stree t)"
-  by (induction t rule: nodes_stree.induct) auto
-
-lemma finite_tree_graph_edges: "finite (tree_graph_edges t)"
-  by (induction t rule: tree_graph_edges.induct) auto
-
-fun distinct_edges :: "'a stree \<Rightarrow> bool" where
-  "distinct_edges (SNode a ts) \<longleftrightarrow> inj_on (\<lambda>t. {a, root t}) (set ts)
-    \<and> (\<forall>t\<in>set ts. disjnt ((\<lambda>t. {a, root t}) ` set ts) (tree_graph_edges t))
-    \<and> disjoint_family_on tree_graph_edges (set ts)
-    \<and> (\<forall>t\<in>set ts. distinct_edges t)"
-
-lemma distinct_nodes_distinct_edges: "distinct_nodes t \<Longrightarrow> distinct_edges t"
-proof (induction t rule: distinct_edges.induct)
-  case (1 a ts)
-  then show ?case using tree_graph_edges_wf
-    by (auto simp: disjoint_family_on_def disjnt_iff,
-        smt (verit) disjoint_insert(2) doubleton_eq_iff inj_on_def mk_disjoint_insert root_wf,
-        blast,
-        metis Suc_1 card.empty card_tree_graph_edges_distinct disjoint_iff equals0I nat.simps(3) subsetD)
-qed
-
-lemma card_nodes_edges: "distinct_nodes t \<Longrightarrow> card (nodes_stree t) = Suc (card (tree_graph_edges t))"
-proof (induction t rule: tree_graph_edges.induct)
-  case (1 a ts)
-  let ?t = "SNode a ts"
-  have distinct_edges: "distinct_edges ?t" using distinct_nodes_distinct_edges 1(2) by blast
-  then have card_root_edges: "card ((\<lambda>t. {a, root t}) ` set ts) = card (set ts)" using card_image by auto
-  have finite_Un: "finite (\<Union>t\<in>set ts. nodes_stree t)" using finite_Union finite_nodes_stree by blast
-  then have "card (nodes_stree ?t) = Suc (card (\<Union>t\<in>set ts. nodes_stree t))" using 1(2) card_insert_disjoint finite_Un by simp
-  also have "\<dots> = Suc (\<Sum>t\<in>set ts. card (nodes_stree t))" using 1(2) card_UN_disjoint' finite_nodes_stree by auto
-  also have "\<dots> = Suc (\<Sum>t\<in>set ts. Suc (card (tree_graph_edges t)))" using 1 by simp
-  also have "\<dots> = Suc (card (set ts) + (\<Sum>t\<in>set ts. card (tree_graph_edges t)))" by (metis add.commute sum_Suc)
-  also have "\<dots> = Suc (card ((\<lambda>t. {a, root t}) ` set ts) + (\<Sum>t\<in>set ts. card (tree_graph_edges t)))" using card_root_edges by simp
-  also have "\<dots> = Suc (card ((\<lambda>x. {a, root x}) ` set ts) + card (\<Union> (tree_graph_edges ` set ts)))"
-    using distinct_edges card_UN_disjoint' finite_tree_graph_edges by fastforce
-  also have "\<dots> = Suc (card ((\<lambda>x. {a, root x}) ` set ts \<union> (\<Union> (tree_graph_edges ` set ts))))" (is "Suc (card ?r + card ?Un) = Suc (card (?r \<union> ?Un))")
-  proof-
-    have disjnt: "disjnt ?r ?Un" using disjoint_UN_iff distinct_edges by auto
-    show ?thesis using card_Un_disjnt[OF _ _ disjnt] finite_tree_graph_edges by fastforce
-  qed
-  finally show ?case by simp
-qed
-
-lemma tree_tree_graph_edges: "distinct_nodes t \<Longrightarrow> tree (nodes_stree t) (tree_graph_edges t)"
-proof (induction t rule: tree_graph_edges.induct)
-  case (1 a ts)
-  let ?t = "SNode a ts"
-  have "\<And>e. e \<in> tree_graph_edges ?t \<Longrightarrow> 0 < card e \<and> card e \<le> 2" using card_tree_graph_edges_distinct 1 by (metis order_refl pos2)
-  then interpret g: fin_ulgraph "nodes_stree ?t" "tree_graph_edges ?t" using tree_graph_edges_wf finite_nodes_stree by (unfold_locales) blast+
-  have "g.vert_connected a v" if t: "t \<in> set ts" and v: "v \<in> nodes_stree t" for t v
-  proof-
-    interpret t: tree "nodes_stree t" "tree_graph_edges t" using 1 t by auto
-    interpret subg: ulsubgraph "nodes_stree t" "tree_graph_edges t" "nodes_stree ?t" "tree_graph_edges ?t" using t by unfold_locales auto
-    have conn_root_v: "g.vert_connected (root t) v" using subg.vert_connected v root_wf t.vertices_connected by blast
-    have "{a, root t} \<in> tree_graph_edges ?t" using t by auto
-    then have "g.vert_connected a (root t)" using g.vert_connected_neighbors by blast
-    then show ?thesis using conn_root_v g.vert_connected_trans by blast
-  qed
-  then have "\<forall>v\<in>nodes_stree ?t. g.vert_connected a v" using g.vert_connected_id by auto
-  then have "g.is_connected_set (nodes_stree ?t)" using g.vert_connected_trans g.vert_connected_rev unfolding g.is_connected_set_def by blast 
-  then interpret g: fin_connected_ulgraph "nodes_stree ?t" "tree_graph_edges ?t" by unfold_locales auto
-  show ?case using card_E_treeI card_nodes_edges 1(2) g.fin_connected_ulgraph_axioms by blast
-qed
-
-lemma rtree_tree_graph_edges: "distinct_nodes t \<Longrightarrow> rtree (nodes_stree t) (tree_graph_edges t) (root t)"
-  using tree_tree_graph_edges root_wf rtree.intro unfolding rtree_axioms_def by fast
-
-lemma postorder_label_aux_mono: "fst (postorder_label_aux n t) \<ge> n"
-  by (induction n t rule: postorder_label_aux.induct) (auto split: prod.split stree.split, fastforce)
-
-lemma nodes_postorder_label_aux_ge: "postorder_label_aux n t = (n', t') \<Longrightarrow> v \<in> nodes_stree t' \<Longrightarrow> v \<ge> n"
-  by (induction n t arbitrary: n' t' rule: postorder_label_aux.induct,
-      auto split: prod.splits stree.splits,
-      (metis fst_conv le_SucI order.trans postorder_label_aux_mono)+)
-
-lemma nodes_postorder_label_aux_le: "postorder_label_aux n t = (n', t') \<Longrightarrow> v \<in> nodes_stree t' \<Longrightarrow> v \<le> n'"
-  by (induction n t arbitrary: n' t' rule: postorder_label_aux.induct,
-      auto split: prod.splits stree.splits,
-      metis Suc_leD fst_conv order_trans postorder_label_aux_mono,
-      blast)
-
-lemma distinct_nodes_postorder_label_aux: "distinct_nodes (snd (postorder_label_aux n t))"
-proof (induction n t rule: postorder_label_aux.induct)
-  case (1 n)
-  then show ?case by (simp add: disjoint_family_on_def)
-next
-  case (2 n t ts)
-  obtain n' t' where t': "postorder_label_aux n t = (n', t')" by fastforce
-  obtain n'' r ts' where ts': "postorder_label_aux (Suc n') (Node ts) = (n'', SNode r ts')" by (metis eq_snd_iff stree.exhaust)
-  then have "r \<ge> Suc n'" using nodes_postorder_label_aux_ge by auto
-  then have r_notin_t': "r \<notin> nodes_stree t'" using nodes_postorder_label_aux_le[OF t'] by fastforce
-  have "disjoint_family_on nodes_stree (insert t' (set ts'))" using 2 t' ts' nodes_postorder_label_aux_le[OF t'] nodes_postorder_label_aux_ge[OF ts']
-    by (auto simp add: disjoint_family_on_def, fastforce+)
-  then show ?case using 2 t' ts' r_notin_t' by simp
-qed
-
-lemma distinct_nodes_postorder_label: "distinct_nodes (postorder_label t)"
-  unfolding postorder_label_def using distinct_nodes_postorder_label_aux by simp
-
-lemma tree_of_stree_postorder_label_aux[simp]: "tree_of_stree (snd (postorder_label_aux n t)) = t"
-  by (induction n t rule: postorder_label_aux.induct) (auto split: prod.split stree.split)
-
-lemma tree_of_stree_postorder_label[simp]: "tree_of_stree (postorder_label t) = t"
-  unfolding postorder_label_def by simp
-
-lemma regular_stree_postorder_label: "regular t \<Longrightarrow> regular_stree (postorder_label t)"
-  unfolding regular_stree_def by simp
-
-
-lemma (in rtree) root_stree_of_graph[simp]: "root (stree_of_graph V E r) = r"
-  using rtree_axioms by (auto split: prod.split)
-
-lemma (in rtree) nodes_stree_stree_of_graph[simp]: "nodes_stree (stree_of_graph V E r) = V"
-  using rtree_axioms
-proof (induction V E r rule: stree_of_graph.induct)
-  case (1 V\<^sub>T E\<^sub>T r)
-  then interpret t: rtree V\<^sub>T E\<^sub>T r by simp
-  obtain V' E' where VE': "t.remove_vertex r = (V', E')" by (simp add: t.remove_vertex_def)
-  interpret subg: subgraph V' E' V\<^sub>T E\<^sub>T using t.subgraph_remove_vertex VE' by metis
-  interpret g': fin_ulgraph V' E' using fin_ulgraph.intro subg.is_finite_subgraph t.fin_graph_system_axioms subg.is_subgraph_ulgraph t.ulgraph_axioms by blast
-  define Cs where "Cs = (SOME Cs. set Cs = g'.connected_components \<and> distinct Cs)"
-  have exists_Cs: "\<exists>Cs. set Cs = g'.connected_components \<and> distinct Cs" using g'.finite_connected_components finite_distinct_list by auto
-  then have set_Cs[simp]: "set Cs = g'.connected_components" unfolding Cs_def using someI_ex[OF exists_Cs] by blast
-
-  let ?root_of = "\<lambda>C. THE r'. r' \<in> C \<and> {r, r'} \<in> E\<^sub>T"
-  have rtree_subtrees: "\<forall>C \<in> set Cs. rtree C (graph_system.induced_edges E' C) (?root_of C)" using t.remove_root_subtrees VE' unfolding t.vert_adj_def by simp
-
-  have "nodes_stree (stree_of_graph V\<^sub>T E\<^sub>T r)
-    = {r} \<union> (\<Union>C\<in>set Cs. nodes_stree (stree_of_graph C (graph_system.induced_edges E' C) (?root_of C)))"
-      using rtree_subtrees t.rtree_axioms VE' Cs_def by simp
-  also have "\<dots> = {r} \<union> \<Union>(set Cs)" using 1 VE' Cs_def rtree_subtrees by simp
-  also have "\<dots> = V\<^sub>T" using VE' t.root_wf set_Cs g'.Union_connected_components unfolding t.remove_vertex_def by blast
-  finally show ?case .
-qed
-
-lemma (in rtree) tree_graph_edges_stree_of_graph[simp]: "tree_graph_edges (stree_of_graph V E r) = E"
-  using rtree_axioms
-proof (induction V E r rule: stree_of_graph.induct)
-  case (1 V\<^sub>T E\<^sub>T r)
-  then interpret t: rtree V\<^sub>T E\<^sub>T r by simp
-  obtain V' E' where VE': "t.remove_vertex r = (V', E')" by (simp add: t.remove_vertex_def)
-  interpret subg: subgraph V' E' V\<^sub>T E\<^sub>T using t.subgraph_remove_vertex VE' by metis
-  interpret g': fin_ulgraph V' E' using fin_ulgraph.intro subg.is_finite_subgraph t.fin_graph_system_axioms subg.is_subgraph_ulgraph t.ulgraph_axioms by blast
-  define Cs where "Cs = (SOME Cs. set Cs = g'.connected_components \<and> distinct Cs)"
-  have exists_Cs: "\<exists>Cs. set Cs = g'.connected_components \<and> distinct Cs" using g'.finite_connected_components finite_distinct_list by auto
-  then have set_Cs[simp]: "set Cs = g'.connected_components" unfolding Cs_def using someI_ex[OF exists_Cs] by blast
-  
-  let ?root_of = "\<lambda>C. THE r'. r' \<in> C \<and> {r, r'} \<in> E\<^sub>T"
-  have rtree_subtrees: "\<forall>C \<in> set Cs. rtree C (graph_system.induced_edges E' C) (?root_of C)" using t.remove_root_subtrees VE' unfolding t.vert_adj_def by simp
-
-  have "(\<lambda>t. {r, root t}) ` set (map (\<lambda>C. stree_of_graph C (graph_system.induced_edges E' C) (?root_of C)) Cs) =
-    (\<lambda>C. {r, (?root_of C)}) ` set Cs" using rtree.root_stree_of_graph rtree_subtrees by (simp del: stree_of_graph.simps add: image_comp, fastforce)
-  also have "\<dots> = {e\<in>E\<^sub>T. r \<in> e}" (is "?l = ?r")
-  proof-
-    have 1: "\<And>e. e \<in> ?l \<Longrightarrow> e \<in> ?r" using t.unique_adj_vert_removed[OF t.root_wf VE']  unfolding t.vert_adj_def by (auto, smt (verit) theI)
-    have 2: "e \<in> ?l" if "e \<in> ?r" for e
-    proof-
-      obtain r' where e: "e = {r, r'}" using \<open>e\<in>?r\<close>
-        by (metis (no_types, lifting) CollectD insert_commute insert_iff singleton_iff t.obtain_edge_pair_adj)
-      then have "r' \<noteq> r" using t.singleton_not_edge \<open>e\<in>?r\<close> by force
-      then have "r' \<in> V'" using e \<open>e\<in>?r\<close> VE' t.remove_vertex_def t.wellformed_alt_snd by fastforce
-      then obtain C where C_conn_component: "C \<in> g'.connected_components" and "r' \<in> C" using g'.Union_connected_components by auto
-      have "t.vert_adj r r'" unfolding t.vert_adj_def using \<open>e\<in>?r\<close> e by blast
-      then have "(?root_of C) = r'" using t.unique_adj_vert_removed[OF t.root_wf VE' C_conn_component] \<open>r'\<in>C\<close>
-        unfolding t.vert_adj_def by auto
-      then show ?thesis using e \<open>r'\<in>C\<close> C_conn_component by auto
-    qed
-    show ?thesis using 1 2 by blast
-  qed
-  finally have root_edges: "(\<lambda>t. {r, root t}) ` set (map (\<lambda>C. stree_of_graph C (graph_system.induced_edges E' C) (?root_of C)) Cs) = {e\<in>E\<^sub>T. r \<in> e}" .
-
-  have "(\<Union>t\<in>set (map (\<lambda>C. stree_of_graph C (graph_system.induced_edges E' C) (?root_of C)) Cs). tree_graph_edges t)
-    = (\<Union>C\<in>set Cs. tree_graph_edges (stree_of_graph C (graph_system.induced_edges E' C) (?root_of C)))" by (simp del: stree_of_graph.simps)
-  also have "\<dots> = (\<Union>C\<in>set Cs. graph_system.induced_edges E' C)" using 1 VE' Cs_def rtree_subtrees by simp
-  also have "\<dots> = E'" using g'.Union_induced_edges_connected_components by simp
-  finally have non_root_edges: "(\<Union>t\<in>set (map (\<lambda>C. stree_of_graph C (graph_system.induced_edges E' C) (?root_of C)) Cs). tree_graph_edges t) = E'" .
-
-  have "tree_graph_edges (stree_of_graph V\<^sub>T E\<^sub>T r) = {e\<in>E\<^sub>T. r \<in> e} \<union> E'" using root_edges non_root_edges t.rtree_axioms rtree_subtrees VE' Cs_def by simp
-  also have "\<dots> = E\<^sub>T" using VE' unfolding t.remove_vertex_def incident_def by blast
-  finally show ?case .
-qed
-
-lemma (in rtree) tree_graph_stree_of_graph[simp]: "tree_graph_stree (stree_of_graph V E r) = (V,E,r)"
-  using nodes_stree_stree_of_graph tree_graph_edges_stree_of_graph root_stree_of_graph unfolding tree_graph_stree_def by blast
-
-lemma (in rtree) rtree_size_stree_of_graph[simp]: "stree_size (stree_of_graph V E r) = card V"
-  using rtree_axioms
-proof (induction V E r rule: stree_of_graph.induct)
-  case (1 V\<^sub>T E\<^sub>T r)
-  then interpret t: rtree V\<^sub>T E\<^sub>T r by simp
-  obtain V' E' where VE': "t.remove_vertex r = (V', E')" by (simp add: t.remove_vertex_def)
-  interpret subg: subgraph V' E' V\<^sub>T E\<^sub>T using t.subgraph_remove_vertex VE' by metis
-  interpret g': fin_ulgraph V' E' using fin_ulgraph.intro subg.is_finite_subgraph t.fin_graph_system_axioms subg.is_subgraph_ulgraph t.ulgraph_axioms by blast
-  define Cs where "Cs = (SOME Cs. set Cs = g'.connected_components \<and> distinct Cs)"
-  have exists_Cs: "\<exists>Cs. set Cs = g'.connected_components \<and> distinct Cs" using g'.finite_connected_components finite_distinct_list by auto
-  then have set_Cs[simp]: "set Cs = g'.connected_components" and distinct_Cs: "distinct Cs"
-    unfolding Cs_def using someI_ex[OF exists_Cs] by auto
-  
-  let ?root_of = "\<lambda>C. THE r'. r' \<in> C \<and> {r, r'} \<in> E\<^sub>T"
-  have rtree_subtrees: "\<forall>C \<in> set Cs. rtree C (graph_system.induced_edges E' C) (?root_of C)" using t.remove_root_subtrees VE' unfolding t.vert_adj_def by simp
-
-  have "stree_size (stree_of_graph V\<^sub>T E\<^sub>T r) = stree_size (SNode r (map (\<lambda>C. stree_of_graph C (graph_system.induced_edges E' C) (?root_of C)) Cs))" using 1(2) VE' unfolding Cs_def by simp
-  also have "\<dots> = Suc (\<Sum>C\<leftarrow>Cs. stree_size (stree_of_graph C (graph_system.induced_edges E' C) (?root_of C)))" by (simp del: stree_of_graph.simps, meson comp_apply)
-  also have "\<dots> = Suc (\<Sum>C\<leftarrow>Cs. card C)" using 1 VE' Cs_def rtree_subtrees by (auto simp del: stree_of_graph.simps, metis (mono_tags, lifting) map_eq_conv)
-  also have "\<dots> = Suc (card V')" using set_Cs g'.connected_components_partition_on_V distinct_Cs g'.finite_connected_component
-    by (auto simp: sum_list_distinct_conv_sum_set product_partition)
-  also have "\<dots> = card V\<^sub>T" using VE' t.root_wf card.remove g'.finV unfolding t.remove_vertex_def by fastforce
-  finally show ?case .
-qed
-
-fun normalize_stree :: "'a stree \<Rightarrow> 'a stree" where
-  "normalize_stree (SNode r ts) = SNode r (sort_key tree_of_stree (map normalize_stree ts))"
-
-lemma regular_normalize_stree: "regular_stree (normalize_stree t)"
-  unfolding regular_stree_def by (induction t rule: normalize_stree.induct) simp
-
-lemma stree_size_normalize_stree[simp]: "stree_size (normalize_stree t) = stree_size t"
-  by (induction t rule: normalize_stree.induct) (simp add: sum_image_mset_sum_map[symmetric] del: sum_image_mset_sum_map,
-      meson count_mset_0_iff not_in_iff sum_over_fun_eq)
-
-lemma tree_graph_normalize_stree[simp]: "tree_graph_stree (normalize_stree t) = tree_graph_stree t"
-  unfolding tree_graph_stree_def using image_iff by (induction t rule: normalize_stree.induct) fastforce
-
-lemma (in rtree) ex_regular_stree: "\<exists>t. t \<in> regular_n_strees (card V) \<and> rgraph_isomorph (tree_graph_stree t) (V,E,r)"
-proof-
-  define t where "t = normalize_stree (stree_of_graph V E r)"
-  have isomorph: "rgraph_isomorph (tree_graph_stree t) (V, E, r)" sorry
-  have regular: "t \<in> regular_n_strees (card V)" sorry
-  then show ?thesis using isomorph 
-qed
-
-lemma (in rtree) ex_regular_tree: "\<exists>t\<in>regular_n_trees (card V). rgraph_isomorph (tree_graph t) (V,E,r)"
-  sorry
-
-lemma
-  assumes regular_t1: "regular_stree t1"
-    and regular_t2: "regular_stree t2"
-    and trees_eq: "tree_graph_stree t1 = tree_graph_stree t2"
-  shows "t1 = t2"
-  using assms
-proof (induction t1 arbitrary: t2)
-  case (SNode r1 ts1)
-  obtain r2 ts2 where t2: "t2 = SNode r2 ts2" using stree.exhaust by blast
-  have "r1 = r2" 
-  then show ?case using trees_eq SNode unfolding tree_graph_stree_def t2 apply auto 
-qed
-  obtain r1 ts1 where t1: "t1 = SNode r1 ts1" using stree.exhaust by blast
-  obtain r2 ts2 where t2: "t2 = SNode r2 ts2" using stree.exhaust by blast
-  show ?thesis using trees_eq unfolding tree_graph_stree_def t1 t2 apply auto sledgehammer
-qed
-
-lemma
-  assumes regular_t1: "regular_stree t1"
-    and regular_t2: "regular_stree t2"
-  shows "t1 = t2 \<longleftrightarrow> tree_graph_stree t1 = tree_graph_stree t2"
-proof
-  assume "t1 = t2"
-  then show "tree_graph_stree t1 = tree_graph_stree t2" apply auto
-next
-  assume "tree_graph_stree t1 = tree_graph_stree t2"
-  then show "t1 = t2" sorry
-qed oops
-
-fun relabel_stree :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a stree \<Rightarrow> 'b stree" where
-  "relabel_stree f (SNode r ts) = SNode (f r) (map (relabel_stree f) ts)"
-
-lemma
-  assumes regular_t1: "regular_stree t1"
-    and regular_t2: "regular_stree t2"
-    and trees_eq: "rgraph_isomorphism (tree_graph_stree t1) (tree_graph_stree t2) f"
-  shows "relabel_stree f t1 = t2"
-  using assms
-proof (induction t1 arbitrary: t2)
-  case (SNode r1 ts1)
-  obtain r2 ts2 where t2: "t2 = SNode r2 ts2" using stree.exhaust by blast
-  then have "f r1 = r2" using SNode unfolding tree_graph_stree_def by simp
-  then show ?case using SNode unfolding t2 tree_graph_stree_def apply simp
-qed
-
-lemma
-  assumes regular_t1: "regular_stree t1"
-    and regular_t2: "regular_stree t2"
-    and trees_eq: "tree_graph_stree t1 \<simeq>\<^sub>r tree_graph_stree t2"
-  shows "mset = t2"
-  using assms
-proof (induction t1 arbitrary: t2)
-
-lemma
-  assumes regular_t1: "regular t1"
-    and regular_t2: "regular t2"
-    and "tree_graph t1 \<simeq>\<^sub>r tree_graph t2"
-  shows "t1 = t2"
-proof-
-  then obtain f where ""
-  qed*)
 
 end
