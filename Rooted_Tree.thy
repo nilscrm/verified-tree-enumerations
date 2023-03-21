@@ -1,3 +1,5 @@
+section \<open>Rooted Trees\<close>
+
 theory Rooted_Tree
 imports Tree_Graph "HOL-Library.FSet"
 begin
@@ -47,25 +49,25 @@ definition
 definition
   tree_le_def: "(t :: tree) \<le> r \<longleftrightarrow> t < r \<or> t = r"  
 
-lemma lexord_tree_empty2[simp]: "r \<noteq> Node [] \<Longrightarrow> lexord_tree (Node []) r"
-  using lexord_tree.elims(3) by blast
+lemma lexord_tree_empty2[simp]: "lexord_tree (Node []) r \<longleftrightarrow> r \<noteq> Node []"
+  by (cases r rule: tree_cons_exhaust) auto
 
-lemma mirror_empty: "mirror t = Node [] \<Longrightarrow> t = Node []"
+lemma mirror_empty[simp]: "mirror t = Node [] \<longleftrightarrow> t = Node []"
   by (cases t) auto
 
-lemma mirror_not_empty: "t \<noteq> Node [] \<Longrightarrow> mirror t \<noteq> Node []"
+lemma mirror_not_empty[simp]: "mirror t \<noteq> Node [] \<longleftrightarrow> t \<noteq> Node []"
   by (cases t) auto
 
 lemma tree_le_empty[simp]: "Node [] \<le> t"
   unfolding tree_le_def tree_less_def using mirror_not_empty by auto
 
-lemma tree_less_empty[simp]: "t \<noteq> Node [] \<Longrightarrow> Node [] < t"
-  using tree_le_def tree_le_empty by blast
+lemma tree_less_empty_iff: "Node [] < t \<longleftrightarrow> t \<noteq> Node []"
+  unfolding tree_less_def by simp
 
 lemma not_tree_less_empty[simp]: "\<not> t < Node []"
   unfolding tree_less_def by simp
 
-lemma tree_le_empty2_iff: "t \<le> Node [] \<Longrightarrow> t = Node []"
+lemma tree_le_empty2_iff[simp]: "t \<le> Node [] \<longleftrightarrow> t = Node []"
   unfolding tree_le_def by simp
 
 lemma lexord_tree_antisym: "lexord_tree t r \<Longrightarrow> \<not> lexord_tree r t"
@@ -80,18 +82,20 @@ lemma lexord_tree_not_eq: "lexord_tree t r \<Longrightarrow> t \<noteq> r"
 lemma tree_less_not_eq: "(t::tree) < r \<Longrightarrow> t \<noteq> r"
   unfolding tree_less_def using lexord_tree_not_eq by blast
 
-lemma lexord_tree_eq: "\<not> lexord_tree t t"
+lemma lexord_tree_irrefl: "\<not> lexord_tree t t"
   using lexord_tree_not_eq by blast
 
-lemma tree_less_eq: "\<not> (t::tree) < t"
-  unfolding tree_less_def using lexord_tree_eq by blast
+lemma tree_less_irrefl: "\<not> (t::tree) < t"
+  unfolding tree_less_def using lexord_tree_irrefl by blast
 
 lemma lexord_tree_eq_iff: "\<not> lexord_tree t r \<and> \<not> lexord_tree r t \<longleftrightarrow> t = r"
   using lexord_tree_empty2 by (induction t r rule: lexord_tree.induct, fastforce+)
 
+lemma mirror_mirror: "mirror (mirror t) = t"
+  by (induction t rule: mirror.induct) (simp add: map_idI rev_map)
+
 lemma mirror_inj: "mirror t = mirror r \<Longrightarrow> t = r"
-  by (induction t arbitrary: r rule: mirror.induct,
-      smt (verit, best) list.inj_map_strong mirror.elims rev_rev_ident tree.inject)
+  using mirror_mirror by metis
 
 lemma tree_less_eq_iff: "\<not> (t::tree) < r \<and> \<not> r < t \<longleftrightarrow> t = r"
   unfolding tree_less_def using lexord_tree_eq_iff mirror_inj by blast
@@ -111,7 +115,7 @@ qed
 instance
 proof
   fix t r s :: tree
-  show "t < r \<longleftrightarrow> t \<le> r \<and> \<not> r \<le> t" unfolding tree_le_def using tree_less_antisym tree_less_eq by auto
+  show "t < r \<longleftrightarrow> t \<le> r \<and> \<not> r \<le> t" unfolding tree_le_def using tree_less_antisym tree_less_irrefl by auto
   show "t \<le> t" unfolding tree_le_def by simp
   show "t \<le> r \<Longrightarrow> r \<le> t \<Longrightarrow> t = r" unfolding tree_le_def using tree_less_antisym by blast
   show "t \<le> r \<or> r \<le> t" unfolding tree_le_def using tree_less_eq_iff by blast
@@ -149,9 +153,6 @@ lemma height_children_le_height: "\<forall>t \<in> set ts. height t \<le> n \<Lo
   by (cases ts) auto
 
 
-lemma mirror_mirror: "mirror (mirror t) = t"
-  by (induction t rule: mirror.induct) (simp add: map_idI rev_map)
-
 lemma mirror_iff: "mirror t = Node ts \<longleftrightarrow> t = Node (map mirror (rev ts))"
   by (metis mirror.simps mirror_mirror)
 
@@ -171,13 +172,19 @@ lemma tree_le_cons: "Node ts \<le> Node (t#ts)"
 lemma tree_less_cons': "t \<le> Node rs \<Longrightarrow> t < Node (r#rs)"
   using tree_less_cons by (simp add: order_le_less_trans)
 
-lemma lexord_tree_cons2: "lexord_tree t r \<longleftrightarrow> lexord_tree (Node (ts@[t])) (Node (ts@[r]))"
-  by (induction ts) (auto simp: lexord_tree_eq)
+lemma tree_less_snoc2_iff[simp]: "Node (ts@[t]) < Node (rs@[r]) \<longleftrightarrow> t < r \<or> (t = r \<and> Node ts < Node rs)"
+  unfolding tree_less_def using mirror_inj by auto
 
-lemma tree_less_cons2: "t < r \<longleftrightarrow> Node (t#ts) < Node (r#ts)"
+lemma tree_le_snoc2_iff[simp]: "Node (ts@[t]) \<le> Node (rs@[r]) \<longleftrightarrow> t < r \<or> (t = r \<and> Node ts \<le> Node rs)"
+  unfolding tree_le_def by auto
+
+lemma lexord_tree_cons2[simp]: "lexord_tree (Node (ts@[t])) (Node (ts@[r])) \<longleftrightarrow> lexord_tree t r"
+  by (induction ts) (auto simp: lexord_tree_irrefl)
+
+lemma tree_less_cons2[simp]: "Node (t#ts) < Node (r#ts) \<longleftrightarrow> t < r"
   unfolding tree_less_def using lexord_tree_cons2 by simp
 
-lemma tree_le_cons2: "t \<le> r \<longleftrightarrow> Node (t#ts) \<le> Node (r#ts)"
+lemma tree_le_cons2[simp]: "Node (t#ts) \<le> Node (r#ts) \<longleftrightarrow> t \<le> r"
   unfolding tree_le_def using tree_less_cons2 by blast
 
 lemma tree_less_sorted_snoc: "sorted (ts@[r]) \<Longrightarrow> Node ts < Node (ts@[r])"
@@ -185,32 +192,32 @@ lemma tree_less_sorted_snoc: "sorted (ts@[r]) \<Longrightarrow> Node ts < Node (
       metis leD lexord_tree_eq_iff sorted2 sorted_wrt_append tree_less_def,
       metis dual_order.strict_iff_not list.set_intros(2) nle_le sorted2 sorted_append tree_less_def)
 
-lemma tree_less_snoc2: "t < r \<Longrightarrow> Node (ts@[t]) < Node (rs@[r])"
-  unfolding tree_less_def by auto
-
-lemma lexord_tree_comm_prefix: "lexord_tree (Node (ss@ts)) (Node (ss@rs)) \<longleftrightarrow> lexord_tree (Node ts) (Node rs)"
+lemma lexord_tree_comm_prefix[simp]: "lexord_tree (Node (ss@ts)) (Node (ss@rs)) \<longleftrightarrow> lexord_tree (Node ts) (Node rs)"
   using lexord_tree_antisym by (induction ss) auto
 
-lemma less_tree_comm_suffix: "Node (ts@ss) < Node (rs@ss) \<longleftrightarrow> Node ts < Node rs"
-  unfolding tree_less_def using lexord_tree_comm_prefix by simp
+lemma less_tree_comm_suffix[simp]: "Node (ts@ss) < Node (rs@ss) \<longleftrightarrow> Node ts < Node rs"
+  unfolding tree_less_def by simp
 
-lemma tree_le_comm_suffix: "Node (ts@ss) \<le> Node (rs@ss) \<longleftrightarrow> Node ts \<le> Node rs"
-  unfolding tree_le_def using less_tree_comm_suffix by simp
+lemma tree_le_comm_suffix[simp]: "Node (ts@ss) \<le> Node (rs@ss) \<longleftrightarrow> Node ts \<le> Node rs"
+  unfolding tree_le_def by simp
 
 lemma tree_less_comm_suffix2: "t < r \<Longrightarrow> Node (ts@t#ss) < Node (r#ss)"
   unfolding tree_less_def using lexord_tree_comm_prefix by simp
 
-lemma tree_less_append: "rs \<noteq> [] \<Longrightarrow> Node ts < Node (rs@ts)"
-  using tree_less_cons' by (induction rs) fastforce+
+lemma lexord_tree_append[simp]: "lexord_tree (Node ts) (Node (ts@rs)) \<longleftrightarrow> rs \<noteq> []"
+  using lexord_tree_irrefl by (induction ts) auto
+
+lemma tree_less_append[simp]: "Node ts < Node (rs@ts) \<longleftrightarrow> rs \<noteq> []"
+  unfolding tree_less_def by simp
 
 lemma tree_le_append: "Node ts \<le> Node (ss@ts)"
-  by (metis append.left_neutral tree_le_comm_suffix tree_le_empty)
+  unfolding tree_le_def by simp
 
-lemma tree_le_snoc2: "t \<le> r \<Longrightarrow> Node ts \<le> Node rs \<Longrightarrow> Node (ts@[t]) \<le> Node (rs@[r])"
-  using less_tree_comm_suffix tree_le_def tree_less_snoc2 by auto
+lemma tree_less_singleton_iff[simp]: "Node (ts@[t]) < Node [r] \<longleftrightarrow> t < r"
+  unfolding tree_less_def by simp
 
-lemma tree_le_snoc2_iff[simp]: "Node (ts@[t]) \<le> Node (rs@[r]) \<longleftrightarrow> t < r \<or> (t = r \<and> Node ts \<le> Node rs)"
-  by (metis linorder_not_less not_less_iff_gr_or_eq tree_le_comm_suffix tree_less_snoc2)
+lemma tree_le_singleton_iff[simp]: "Node (ts@[t]) \<le> Node [r] \<longleftrightarrow> t < r \<or> (t = r \<and> ts = [])"
+  unfolding tree_le_def by auto
 
 lemma lexord_tree_nested: "lexord_tree t (Node [t])"
 proof (induction t rule: tree_cons_induct)
@@ -237,12 +244,11 @@ proof
     obtain rs where rs: "r = Node rs" by (cases r) auto
     obtain ss ts' rs' where prefix: "ts = ss @ ts' \<and> rs = ss @ rs' \<and> (ts' = [] \<or> rs' = [] \<or> hd ts' \<noteq> hd rs')" using longest_common_prefix by blast
     then have "ts' = [] \<or> lexord_tree (hd ts') (hd rs')" using lexord unfolding ts rs
-      by (auto, metis lexord_tree.simps(1) lexord_tree_comm_prefix prefix, metis lexord_tree.simps(1,3) lexord_tree_comm_prefix list.exhaust_sel)
+      by (auto, metis lexord_tree.simps(1) lexord_tree.simps(3) list.exhaust_sel)
     then show ?thesis using prefix
       by (metis append.right_neutral lexord lexord_tree.simps(1) lexord_tree_comm_prefix list.exhaust_sel rs ts)
   qed
-  show "?r \<Longrightarrow> ?l" by (auto simp: lexord_tree_comm_prefix,
-        metis append_Nil2 lexord_tree_comm_prefix lexord_tree_empty2 tree.inject)
+  show "?r \<Longrightarrow> ?l" by auto
 qed
 
 lemma tree_less_iff: "t < r \<longleftrightarrow> (\<exists>ts t' ss rs r'. t = Node (ts @ t' # ss) \<and> r = Node (rs @ r' # ss) \<and> t' < r') \<or> (\<exists>ts rs. rs \<noteq> [] \<and> t = Node ts \<and> r = Node (rs @ ts))" (is "?l \<longleftrightarrow> ?r")
@@ -254,25 +260,21 @@ next
   show "?r \<Longrightarrow> ?l"
     by (auto simp: order_le_neq_trans tree_le_append,
         meson dual_order.strict_trans1 tree_le_append tree_less_comm_suffix2)
-qed  
+qed
 
 lemma tree_empty_cons_lt_le: "r < Node (Node [] # ts) \<Longrightarrow> r \<le> Node ts"
 proof (induction ts arbitrary: r rule: rev_induct)
   case Nil
-  then show ?case by (metis dual_order.strict_trans1 order_less_irrefl rev_exhaust tree.exhaust tree_le_append tree_le_cons2 tree_le_empty)
+  then show ?case by (cases r rule: tree_rev_exhaust) auto
 next
   case (snoc x xs)
-  obtain rs where r: "r = Node rs" using tree.exhaust by blast
-  show ?case
-  proof (cases rs rule: rev_exhaust)
+  then show ?case
+  proof (cases r rule: tree_rev_exhaust)
     case Nil
-    then show ?thesis unfolding r by auto
+    then show ?thesis by auto
   next
-    fix rs' r' assume "rs = rs' @ [r']"
-    then show ?thesis using snoc unfolding r
-      by (auto,
-          metis Cons_eq_appendI order.strict_implies_order tree_le_snoc2_iff,
-          metis Cons_eq_appendI less_tree_comm_suffix order.strict_implies_order tree_le_snoc2_iff)
+    case (Snoc rs r1)
+    then show ?thesis using snoc by (auto, (metis append_Cons tree_less_snoc2_iff)+)
   qed
 qed
 
@@ -552,12 +554,11 @@ qed
 
 abbreviation "ltree_stree_subtrees ts \<equiv> SOME xs. fset_of_list xs = ltree_stree |`| ts \<and> distinct xs \<and> sorted_wrt (\<lambda>t s. tree_ltree t \<le> tree_ltree s) xs"
 
-lemma set_ltree_stree_subtrees[simp]: "set (ltree_stree_subtrees ts) = ltree_stree ` fset ts"
-  using someI_ex[OF distinct_sorted_wrt_list, of "ltree_stree |`| ts" tree_ltree]
-  by (smt (verit, best) fset.set_map fset_of_list.rep_eq)
-
-lemma fset_of_list_stree_subtrees[simp]: "fset_of_list (ltree_stree_subtrees ts) = ltree_stree |`| ts"
+lemma fset_of_list_ltree_stree_subtrees[simp]: "fset_of_list (ltree_stree_subtrees ts) = ltree_stree |`| ts"
   using someI_ex[OF distinct_sorted_wrt_list] by fast
+
+lemma set_ltree_stree_subtrees[simp]: "set (ltree_stree_subtrees ts) = ltree_stree ` fset ts"
+  using fset_of_list_ltree_stree_subtrees by (metis (mono_tags, lifting) fset.set_map fset_of_list.rep_eq)
 
 lemma distinct_ltree_stree_subtrees: "distinct (ltree_stree_subtrees ts)"
   using someI_ex[OF distinct_sorted_wrt_list] by blast
@@ -688,14 +689,25 @@ fun distinct_edges :: "'a stree \<Rightarrow> bool" where
     \<and> disjoint_family_on tree_graph_edges (fset ts)
     \<and> (\<forall>t\<in>fset ts. distinct_edges t)"
 
+lemma distinct_nodes_inj_on_root_stree: "distinct_stree_nodes (SNode r ts) \<Longrightarrow> inj_on root_stree (fset ts)"
+  by (auto simp: disjoint_family_on_def, metis IntI emptyE inj_onI root_stree_wf)
+
 lemma distinct_nodes_distinct_edges: "distinct_stree_nodes t \<Longrightarrow> distinct_edges t"
 proof (induction t rule: distinct_edges.induct)
   case (1 r ts)
-  then show ?case using tree_graph_edges_wf
+  have inj_on: "inj_on (\<lambda>t. {r, root_stree t}) (fset ts)"
+  proof
+    fix t s assume t_in_ts: "t \<in> fset ts" and s_in_ts: "s \<in> fset ts"
+    assume "{r, root_stree t} = {r, root_stree s}"
+    then have "root_stree t = root_stree s" using 1(2) doubleton_eq_iff by metis
+    then show "t = s" using distinct_nodes_inj_on_root_stree[OF 1(2)] s_in_ts t_in_ts by (simp add: inj_onD)
+  qed
+  have disjoint_family_on: "disjoint_family_on tree_graph_edges (fset ts)" using 1 tree_graph_edges_wf apply (auto simp: disjoint_family_on_def)
+  then show ?case using tree_graph_edges_wf distinct_nodes_inj_on_root_stree apply auto apply (auto simp: inj_on_def) 
     by (auto simp: disjoint_family_on_def disjnt_iff,
         smt (verit) disjoint_insert(2) doubleton_eq_iff inj_on_def mk_disjoint_insert root_stree_wf,
         blast,
-        metis Suc_1 card.empty card_tree_graph_edges_distinct disjoint_iff equals0I nat.simps(3) subsetD)
+        metis Suc_1 card.empty card_tree_graph_edges_distinct disjoint_iff equals0I nat.simps(3) subsetD
 qed
 
 lemma card_nodes_edges: "distinct_stree_nodes t \<Longrightarrow> card (nodes_stree t) = Suc (card (tree_graph_edges t))"

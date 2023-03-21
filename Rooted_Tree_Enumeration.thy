@@ -63,14 +63,11 @@ lemma trim_id: "trim_tree n t = (Suc n', t') \<Longrightarrow> t = t'"
   by (induction n t arbitrary: n' t' rule: trim_tree.induct) (auto split: prod.splits nat.splits tree.splits)
 
 lemma trim_tree_le: "(n', t') = trim_tree n t \<Longrightarrow> t' \<le> t"
-proof (induction n t arbitrary: n' t' rule: trim_tree.induct)
-  case (4 va t ts)
-  then show ?case using trim_id[of "Suc (Suc va)" "Node ts"] tree_le_cons2
-    by (auto split: prod.splits nat.splits tree.splits simp: tree_less_cons' order_less_imp_le) 
-qed auto
+  using trim_id by (induction n t arbitrary: n' t' rule: trim_tree.induct)
+    (auto split: prod.splits tree.splits nat.splits simp: order_less_imp_le tree_less_cons', fastforce)
 
 lemma fill_tree_le: "r \<in> set (fill_tree n t) \<Longrightarrow> r \<le> t"
-  using trim_tree_le order_trans by (induction n t rule: fill_tree.induct, auto, fastforce)
+  using trim_tree_le by (induction n t rule: fill_tree.induct) (auto, fastforce)
 
 lemma next_tree_aux_lt: "height t \<ge> 2 \<Longrightarrow> the (next_tree_aux n t) < t"
 proof (induction n t rule: next_tree_aux.induct)
@@ -273,7 +270,7 @@ proof (induction t rule: n_tree_enum_aux.induct)
   qed
 qed
 
-lemma size_greatest_tree: "n \<noteq> 0 \<Longrightarrow> tree_size (greatest_tree n) = n"
+lemma size_greatest_tree[simp]: "n \<noteq> 0 \<Longrightarrow> tree_size (greatest_tree n) = n"
   by (induction n rule: greatest_tree.induct) auto
 
 lemma size_n_tree_enum: "t \<in> set (n_tree_enum n) \<Longrightarrow> tree_size t = n"
@@ -285,42 +282,34 @@ lemma "set (n_tree_enum n) \<subseteq> regular_n_trees n"
   using regular_n_tree_enum size_n_tree_enum unfolding regular_n_trees_def n_trees_def by blast
 
 lemma greatest_tree_lt_Suc: "n \<noteq> 0 \<Longrightarrow> greatest_tree n < greatest_tree (Suc n)"
-  using tree_less_cons2 by (induction n rule: greatest_tree.induct) auto
+  by (induction n rule: greatest_tree.induct) (auto simp: tree_less_nested)
 
 lemma greatest_tree_ge: "tree_size t \<le> n \<Longrightarrow> t \<le> greatest_tree n"
-proof (induction n arbitrary: t rule: less_induct)
-  case (less n)
+proof (induction n arbitrary: t rule: greatest_tree.induct)
+  case 1
+  then show ?case by (cases t rule: tree_cons_exhaust) (auto simp: tree_size_ne_0)
+next
+  case (2 v)
   then show ?case
-  proof (cases n)
-    case 0
-    then show ?thesis using less tree_size_ne_0 by blast
+  proof (cases t rule: tree_rev_exhaust)
+    case Nil
+    then show ?thesis by simp
   next
-    case (Suc n')
+    case (Snoc ts r)
+    then have r_le_greatest_Suc_v: "r \<le> greatest_tree (Suc v)" using 2 by auto
     then show ?thesis
-    proof (cases t rule: tree_cons_exhaust)
-      case Nil
-      then show ?thesis using less Suc by auto
+    proof (cases "r = greatest_tree (Suc v)")
+      case True
+      then have "ts = []" using 2(2) Snoc by (simp add: tree_size_ne_0)
+      then show ?thesis using Snoc r_le_greatest_Suc_v by auto
     next
-      case (Cons r ts)
-      then show ?thesis
-      proof (cases ts rule: rev_exhaust)
-        case Nil
-        then show ?thesis using less Suc Cons tree_le_cons2
-          by (auto, metis One_nat_def greatest_tree.elims lessI nat.distinct(1) not_less_eq_eq tree_size_ge_1)
-      next
-        case (snoc ts' r2)
-        have size_r2: "tree_size r2 < n'" using less(2) tree_size_ge_1 unfolding snoc Cons Suc
-          by (auto, smt (verit, ccfv_threshold) One_nat_def Suc_diff_1 add_le_mono dual_order.trans
-              linorder_le_less_linear not_less_eq_eq plus_1_eq_Suc trans_le_add2)
-        then obtain n'' where n'': "n' = Suc n''" using less_imp_Suc_add by auto
-        then have r2_lt_greatest_n': "r2 < greatest_tree n'" using less(1) greatest_tree_lt_Suc size_r2 unfolding Suc
-          by (smt (verit) One_nat_def greatest_tree.elims le_add2 less_Suc_eq_le nless_le
-              order_less_le_trans plus_1_eq_Suc tree_size_ge_1)
-        show ?thesis using Cons snoc tree_less_snoc2[OF r2_lt_greatest_n', of _ "[]"] Suc n''
-          by (auto, metis Cons_eq_appendI order_less_imp_le)
-      qed
+      case False
+      then show ?thesis using r_le_greatest_Suc_v Snoc by auto
     qed
   qed
+next
+  case 3
+  then show ?case by (simp add: tree_size_ne_0)
 qed
 
 fun least_tree :: "nat \<Rightarrow> tree" where
@@ -384,11 +373,11 @@ proof (induction n arbitrary: t rule: less_induct)
         case True
         then have "tree_size (Node rs) \<ge> n''" using less(3) unfolding n t Suc snoc by auto
         then show ?thesis using less True unfolding n t Suc snoc
-          by (auto simp: simp: replicate_append_same[symmetric] tree_le_comm_suffix, force)
+          by (auto simp: simp: replicate_append_same[symmetric], force)
       next
         case False
         then show ?thesis using less False unfolding n t Suc snoc
-          by (auto simp: replicate_append_same[symmetric] order_less_imp_le tree_less_snoc2)
+          by (auto simp: replicate_append_same[symmetric] tree_less_empty_iff)
       qed
     qed
   qed
@@ -407,10 +396,8 @@ next
   then show ?case by auto
 next
   case (4 va t ts)
-  then show ?case
-    apply (auto split: prod.splits nat.splits)
-    using size_trim_tree dual_order.trans not_less_eq_eq tree_size_ge_1 apply fastforce
-    using size_trim_tree by fastforce
+  then show ?case using size_trim_tree[OF _ 4(4)] size_trim_tree
+    by (auto split: prod.splits nat.splits simp: tree_size_ne_0, fastforce)
 qed
 
 lemma tree_ge_lt_suffix: "Node ts \<le> r \<Longrightarrow> r < Node (t#ts) \<Longrightarrow> \<exists>ss. r = Node (ss @ ts)"
@@ -420,10 +407,8 @@ proof (induction ts arbitrary: r rule: rev_induct)
 next
   case (snoc x xs)
   then show ?case using tree_le_empty2_iff
-    by (cases r rule: tree_rev_exhaust, auto,
-        metis Cons_eq_appendI tree_less_antisym tree_less_snoc2,
-        metis Cons_eq_appendI tree_less_antisym tree_less_snoc2,
-        metis Cons_eq_appendI less_tree_comm_suffix tree.inject)
+    by (cases r rule: tree_rev_exhaust)
+      (simp_all, metis Cons_eq_appendI tree.inject tree_less_antisym tree_less_snoc2_iff)
 qed
 
 lemma trim_tree_0_iff: "fst (trim_tree n t) = 0 \<longleftrightarrow> n \<le> tree_size t"
@@ -481,7 +466,7 @@ next
         then have "ss = []"
         proof (cases "t2 = t")
           case True
-          then show ?thesis using 4(4) tree_less_append leD unfolding r \<open>s=t2\<close> True by auto
+          then show ?thesis using 4(4) nle_le tree_le_append unfolding r \<open>s=t2\<close> True by auto
         next
           case False
           then have "n2 = 0" using nt2 trim_id by (cases n2) auto
@@ -730,5 +715,8 @@ proof-
     unfolding n_rtree_graph_enum_def by auto
   then show ?thesis using t_G tree_graph_inj_iso \<open>G \<simeq>\<^sub>r H\<close> by auto
 qed
+
+theorem ex1_iso_n_rtree_graph_enum: "G \<in> n_rtree_graphs n \<Longrightarrow> \<exists>!G' \<in> set (n_rtree_graph_enum n). G' \<simeq>\<^sub>r G"
+  using inj_iso_n_rtree_graph_enum rgraph_isomorph_trans rgraph_isomorph_sym n_rtree_graph_enum_surj unfolding transp_def by blast
 
 end

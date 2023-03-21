@@ -131,8 +131,8 @@ lemma (in fin_ulgraph) length_path_card_V: "is_path p \<Longrightarrow> length p
   by (metis path_wf card_mono distinct_card finV is_path_def)
 
 lemma (in ulgraph) is_gen_path_prefix: "is_gen_path (xs@ys) \<Longrightarrow> xs \<noteq> [] \<Longrightarrow> is_gen_path (xs)"
-  unfolding is_gen_path_def using is_walk_prefix apply auto
-  by (metis Int_iff distinct.simps(2) emptyE last_appendL last_appendR last_in_set list.collapse)
+  unfolding is_gen_path_def using is_walk_prefix
+  by (auto, metis Int_iff distinct.simps(2) emptyE last_appendL last_appendR last_in_set list.collapse)
 
 lemma (in ulgraph) connecting_path_append: "connecting_path u w (xs@ys) \<Longrightarrow> xs \<noteq> [] \<Longrightarrow> connecting_path u (last xs) xs"
   unfolding connecting_path_def using is_gen_path_prefix by auto
@@ -381,11 +381,10 @@ proof-
         then obtain xs ys where p: "p = xs @ l # ys" by (meson split_list)
         have "l \<noteq> u" "l \<noteq> v" using inV' remove_vertex unfolding remove_vertex_def by auto
         then have "xs \<noteq> []" using p conn_path unfolding connecting_path_def by fastforce
-        then obtain xs' x where xs: "xs = xs'@[x]" by (meson rev_exhaust)
-        then have "x \<noteq> l" using distinct p by simp
-        have "{x,l} \<in> set (walk_edges p)" using conn_path walk_edges_append_union p xs
-          by (smt (verit) Un_insert_right \<open>xs \<noteq> []\<close> comp_sgraph.walk_edges_append_union insert_iff
-              last_snoc list.discI list.sel(1))
+        then obtain x where last_xs: "last xs = x" by simp
+        then have "x \<noteq> l" using distinct p \<open>xs\<noteq>[]\<close> by auto
+        have "{x,l} \<in> set (walk_edges p)" using walk_edges_append_union \<open>xs\<noteq>[]\<close> unfolding p
+          by (simp add: walk_edges_append_union last_xs)
         then have xl_incident: "{x,l} \<in> incident_sedges l" using conn_path \<open>x\<noteq>l\<close>
           unfolding connecting_path_def is_gen_path_def is_walk_def incident_sedges_def incident_def by auto
 
@@ -397,7 +396,7 @@ proof-
           unfolding connecting_path_def is_gen_path_def is_walk_def incident_sedges_def incident_def by auto
 
         have card_loops: "card (incident_loops l) = 0" using degree unfolding degree_def by auto
-        have "x \<noteq> y" using distinct unfolding p xs ys by simp
+        have "x \<noteq> y" using distinct last_xs \<open>xs\<noteq>[]\<close> unfolding p ys by fastforce
         then have "{x,l} \<noteq> {y,l}" by (metis doubleton_eq_iff)
         then have "card (incident_sedges l) \<noteq> 1" using xl_incident yl_incident
           by (metis card_1_singletonE singletonD)
@@ -607,9 +606,10 @@ lemma (in ulgraph) subset_conn_comps_if_Union:
 proof (rule ccontr)
   assume "A \<noteq> connected_components"
   then obtain C where C_conn_comp: "C \<in> connected_components " "C \<notin> A" using A_subset_conn_comps by blast
-  then have "C = {}" using A_subset_conn_comps Un_A connected_components_partition_on_V unfolding partition_on_def
-    by (auto, smt (verit, best) UnionE UnionI disjnt_iff pairwise_def subset_iff)
-  then show False using connected_components_partition_on_V C_conn_comp unfolding partition_on_def by blast
+  then obtain v where "v \<in> C" using connected_component_non_empty by blast
+  then have "v \<notin> V" using A_subset_conn_comps Un_A connected_components_partition_on_V C_conn_comp
+    using partition_onD4 by fastforce
+  then show False using C_conn_comp connected_component_wf \<open>v\<in>C\<close> by auto
 qed
 
 lemma (in connected_ulgraph) exists_adj_vert_removed:
