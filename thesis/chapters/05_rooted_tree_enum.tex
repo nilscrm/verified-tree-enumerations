@@ -107,7 +107,7 @@ To simplify the definition in a functional setting, we first define the regular 
     \ \ tree{\isacharunderscore}{\kern0pt}less{\isacharunderscore}{\kern0pt}def{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}{\isacharparenleft}{\kern0pt}t{\isacharcolon}{\kern0pt}{\isacharcolon}{\kern0pt}tree{\isacharparenright}{\kern0pt}\ {\isacharless}{\kern0pt}\ r\ {\isasymlongleftrightarrow}\ lexord{\isacharunderscore}{\kern0pt}tree\ {\isacharparenleft}{\kern0pt}mirror\ t{\isacharparenright}{\kern0pt}\ {\isacharparenleft}{\kern0pt}mirror\ r{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}
 \end{isabellebox}
 
-For a rooted tree $T$, we now define the canonical ordered tree as the least ordered tree corresponding to $T$.
+For a rooted tree $T$, we now define the canonical ordered tree as the greatest ordered tree corresponding to $T$.
 In Figure \ref{fig:example_rooted_trees} the left tree is the canonical ordered tree.
 
 The algorithm will produce all canonical ordered trees.
@@ -187,7 +187,7 @@ Generating the next smallest tree follows these 4 steps:
 
 \begin{enumerate}
     \item Remove all direct subtrees of the root node which are singleton trees
-    \item Find the first node $v$ (in preorder) which has a singleton tree as the first subtree and call its subtree $T_v$
+    \item Find the first node $v$ (in preorder) which has a singleton tree as the first subtree. Let the subtree of $v$ be $T_v$
     \item Remove the first singleton subtree of $T_v$ which result in a tree $T_v'$
     \item Let $p$ be the parent of $v$. Fill the subtree list of $p$ with $T_v'$ until the entire tree consists of $n$ nodes again
 \end{enumerate}
@@ -231,6 +231,7 @@ See Figure \ref{fig:next_tree} for examples of how the function operates.
             child {node {}}
             child {node {}}
             child {node {}}
+            child {node {}}
             child {node {p}
                 child {node[color=blue] {v}
                     child[color=red] {node {}}
@@ -254,7 +255,7 @@ See Figure \ref{fig:next_tree} for examples of how the function operates.
         level 3/.style={sibling distance=7mm}]
         \node {}
             child {node {p}
-                child {node[color=blue] {} child[color=blue] {node {}}}
+                child {node[color=blue] {} child[color=blue] {node {} child {node {}}}}
                 child {node[color=blue] {}
                     child[color=blue] {node {}}
                     child[color=blue] {node {} child {node {}}}
@@ -274,7 +275,7 @@ See Figure \ref{fig:next_tree} for examples of how the function operates.
 \label{fig:next_tree}
 \end{figure}
 
-This function can be directly defined recursively on the tree datatype. None will be retuned if the argument is already the smallest tree and thus there is no next smaller tree.
+This function can be directly defined recursively on the tree datatype.
 
 \begin{isabellebox}
     \isacommand{fun}\isamarkupfalse%
@@ -291,6 +292,8 @@ This function can be directly defined recursively on the tree datatype. None wil
     \ next{\isacharunderscore}{\kern0pt}tree\ {\isacharcolon}{\kern0pt}{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}tree\ {\isasymRightarrow}\ tree\ option{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
     \ \ {\isachardoublequoteopen}next{\isacharunderscore}{\kern0pt}tree\ t\ {\isacharequal}{\kern0pt}\ next{\isacharunderscore}{\kern0pt}tree{\isacharunderscore}{\kern0pt}aux\ {\isadigit{0}}\ t{\isachardoublequoteclose}
 \end{isabellebox}
+
+None will be retuned if the argument is already the smallest tree and thus there is no next smaller tree.
 
 To now enumerate all rooted trees with $n$ nodes,
 one starts with the greatest tree on $n$ nodes and repeatedly calls $next\_tree$ until the smallest tree is reached.
@@ -318,6 +321,8 @@ To prove termination of the enumeration we show that the output of $next\_tree$ 
 
 \section{Proof of correctness}
 
+\subsection{Totality}
+
 Instead of working with canonical rooted tree, we work with an alternative (equivalent) definition of regularity.
 A rooted ordered tree is regular iff the subtrees are ordered with respect to the linear order previously defined and all subtrees are regular themselves.
 To prove correctness we first show that the algorithms enumerates all regular ordered rooted trees and then that the set of regular ordered rooted trees is equivalent to the set of rooted trees modulo isomorphism.
@@ -325,4 +330,50 @@ To prove correctness we first show that the algorithms enumerates all regular or
 By simple induction all defined functions can be shown to preserve regularity. In addition to that $next\_tree$ preserves the size of the tree, again by induction and simple auxiliary lemmas on the size of the output of the defined function.
 Since the $greatest\_tree\ n$ is regular and in of size $n$ the algorithms produces only regular trees of size $n$.
 Due to the strict monotonicity of $next\_tree$ proven earlier it immediately follows that no tree is generated twice.
+In addition, we prove that there is a unique minimal tree of size $n$, namely the tree consisting of a root node and $n-1$ singleton subtrees.
+The enumeration stops only if this minimal tree is reached.
+What is left to prove is that the algorithm does not skip any regular rooted tree.
+For this some auxiliary lemmas are needed.
+First, observe that due to the order in which $trim\_tree$ removes nodes, $trim\_tree\ n\ t$ is the greatest tree with at most $n$ nodes that is smaller or equal to $t$.
+This also means that a tree which has as subtrees the list of trees generated by $fill\_tree\ n\ t$ is the greatest tree of size $n + 1$ (observe the additional root node) where every subtree is smaller or equal to $t$.
+Now to get an intuition of why $next\_tree$ generates the next smallest tree consider counting down numbers as analogy.
+When counting down from $14200$ one tries to decrease the rightmost digit that can be decreases, i.e. the 2.
+Then set the digits to the right of the decreased number to their maximum resulting in $14199$.
+
+Since subtrees are compared in reverse order, the leftmost subtree that can be decreased (i.e. is not a singleton) will be decreased by removing its leftmost leaf.
+Then using $fill\_tree$ the subtree left to the decreased tree is maximized.
+This argument can be made formal by computation induction on $next\_tree$ and with some technicalities we omit here.
+Thus, we have proven that all regular trees of size $n$ are enumerated by the algorithm.
+
+\subsection{Distinctness modulo Isomorphism}
+
+In order for the algorithm to meet its specification we need to show that the regular ordered rooted trees are equivalent to all rooted trees.
+We define a function to map an ordered unlabeled rooted tree to a rooted labeled tree in graph form.
+This is done via two additional intermediate steps which simplify the proofs.
+First we define ordered rooted labeled trees which are like ordered rooted trees except that each node has a label associated with it.
+A function is defined to label the nodes of an unlabeled tree.
+This can be done arbitrarily as long as the nodes have different labels since any labeling will produce an isomorphic tree.
+Next we define unordered labeled trees where the subtrees of a node are represented as a finite set instead of an ordered list.
+As the last step one can transform an unordered labeled tree $t$ into its graph representation simply by the graph $G = (V,E)$ where $V$ is the set of nodes in $t$ an $E$ contains an edge for every node to the roots of its subtrees.
+Let $t$ be an ordered unlabeled rooted tree, then $G_t$ denotes the graph representation of $t$.
+It can be shown that $G_t$ is indeed a tree, i.e. connected and acyclic.
+
+We now want to show for every tree graph $T$ there exists exactly one $t$ such that $T$ and $G_t$ are isomorphic.
+Let $r$ be the root of $T$.
+Moreover, let $C$ be the set of connected components of $T - \{r\}$ (the tree without its root). 
+Then one can generate unordered unlabeled trees for each connected component recursively by taking the unique vertex in it that is connected to $r$ as its root.
+The sorted list of these trees will be the subtrees of $t$.
+This construction results in a regular tree $t$ such that $G_t$ is isomorphic to $T$.
+Denote this tree by $t(T)$
+
+The remaining step to show uniqueness is to show that $G_{t_1}$ and $G_{t_2}$ are not isomorphic for two distinct regular trees $t_1$ and $t_2$.
+One can prove that $t(G_t) = t$ for all regular trees t.
+Also, since the construction of $t(T)$ does not depend on the labels of the nodes, $t(G_{t_1}) = t(G_{t_2})$.
+This means
+\[
+    t1 = t(G_{t_1}) = t(G_{t_2}) = t2
+\]
+which is a contradiction to the assumption that $t_1$ and $t_2$ are distinct.
+
+This concludes the entire proof and shows that the described algorithm generates each tree exactly once modulo isomorphic, that is it generates all unlabeled rooted trees.
 
