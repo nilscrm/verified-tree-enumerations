@@ -6,5 +6,6 @@ session Tree_Enumeration = HOL +
   theories
     Tree_Graph
     Labeled_Tree_Enumeration
+    Rooted_Tree_Enumeration
   document_files
     "root.tex"

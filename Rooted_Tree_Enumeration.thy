@@ -569,7 +569,7 @@ next
       proof (cases "s' = Node rs")
         case True
         then show ?thesis using 3(1,2) fill_tree_next_smallest unfolding r snoc
-          by (auto simp del: fill_tree.simps simp: tree_le_comm_suffix sorted_append)
+          by (auto simp del: fill_tree.simps simp: sorted_append)
       next
         case False
         then show ?thesis using s'_le_rs unfolding r snoc by (auto, meson tree_le_def tree_less_iff)
@@ -604,7 +604,7 @@ next
       next
         case False
         obtain us where s': "s' = Node us" using tree.exhaust by blast
-        \<comment> \<open>s'' is greater than s' but has the size as t so the IH can be used on it.\<close>
+        \<comment> \<open>s'' is greater than s' but has the same size as t so the IH can be used on it.\<close>
         define s'' where "s'' = fill_twos (tree_size t + n - tree_size s') s'"
         have size_s': "tree_size s' \<le> tree_size t + n" using 4(2)[folded t_def] unfolding r snoc by simp
         then have size_s'': "tree_size s'' = tree_size t + n" unfolding s''_def using size_fill_twos by auto

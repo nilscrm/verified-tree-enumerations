@@ -286,7 +286,7 @@ definition n_trees :: "nat \<Rightarrow> tree set" where
   "n_trees n = {t. tree_size t = n}"
 
 definition regular_n_trees :: "nat \<Rightarrow> tree set" where
-  "regular_n_trees n = {t\<in>n_trees n. regular t}"
+  "regular_n_trees n = {t. tree_size t = n \<and> regular t}"
 
 
 subsection \<open>Rooted graphs\<close>
@@ -644,8 +644,6 @@ lemma (in rtree) tree_graph_stree_of_graph[simp]: "tree_graph_stree (stree_of_gr
   using nodes_stree_stree_of_graph tree_graph_edges_stree_of_graph root_stree_of_graph unfolding tree_graph_stree_def by blast
 
 
-text \<open>tree_graph t is actually a rooted tree\<close>
-
 lemma postorder_label_aux_mono: "fst (postorder_label_aux n t) \<ge> n"
   by (induction n t rule: postorder_label_aux.induct) (auto split: prod.split ltree.split, fastforce)
 
@@ -692,41 +690,47 @@ fun distinct_edges :: "'a stree \<Rightarrow> bool" where
 lemma distinct_nodes_inj_on_root_stree: "distinct_stree_nodes (SNode r ts) \<Longrightarrow> inj_on root_stree (fset ts)"
   by (auto simp: disjoint_family_on_def, metis IntI emptyE inj_onI root_stree_wf)
 
-lemma distinct_nodes_distinct_edges: "distinct_stree_nodes t \<Longrightarrow> distinct_edges t"
-proof (induction t rule: distinct_edges.induct)
-  case (1 r ts)
-  have inj_on: "inj_on (\<lambda>t. {r, root_stree t}) (fset ts)"
-  proof
-    fix t s assume t_in_ts: "t \<in> fset ts" and s_in_ts: "s \<in> fset ts"
-    assume "{r, root_stree t} = {r, root_stree s}"
-    then have "root_stree t = root_stree s" using 1(2) doubleton_eq_iff by metis
-    then show "t = s" using distinct_nodes_inj_on_root_stree[OF 1(2)] s_in_ts t_in_ts by (simp add: inj_onD)
+lemma distinct_nodes_disjoint_edges:
+  assumes distinct_nodes: "distinct_stree_nodes (SNode a ts)"
+  shows "disjoint_family_on tree_graph_edges (fset ts)"
+proof-
+  have "tree_graph_edges t1 \<inter> tree_graph_edges t2 = {}"
+    if t1_in_ts: "t1 \<in> fset ts" and t2_in_ts: "t2 \<in> fset ts" and "t1 \<noteq> t2" for t1 t2
+  proof-
+    have "\<forall>e\<in>tree_graph_edges t1. e \<notin> tree_graph_edges t2"
+    proof
+      fix e assume e_in_edges_t1: "e \<in> tree_graph_edges t1"
+      then have "e \<noteq> {}" using t1_in_ts card_tree_graph_edges_distinct distinct_nodes by fastforce
+      then have "\<exists>v\<in>nodes_stree t1. v \<in> e" using tree_graph_edges_wf e_in_edges_t1 by blast
+      then show "e \<notin> tree_graph_edges t2" using \<open>t1\<noteq>t2\<close> distinct_nodes t1_in_ts t2_in_ts tree_graph_edges_wf
+        by (auto simp: disjoint_family_on_def, blast)
+    qed
+    then show ?thesis by blast
   qed
-  have disjoint_family_on: "disjoint_family_on tree_graph_edges (fset ts)" using 1 tree_graph_edges_wf apply (auto simp: disjoint_family_on_def)
-  then show ?case using tree_graph_edges_wf distinct_nodes_inj_on_root_stree apply auto apply (auto simp: inj_on_def) 
-    by (auto simp: disjoint_family_on_def disjnt_iff,
-        smt (verit) disjoint_insert(2) doubleton_eq_iff inj_on_def mk_disjoint_insert root_stree_wf,
-        blast,
-        metis Suc_1 card.empty card_tree_graph_edges_distinct disjoint_iff equals0I nat.simps(3) subsetD
+  then show ?thesis unfolding disjoint_family_on_def by blast
 qed
 
 lemma card_nodes_edges: "distinct_stree_nodes t \<Longrightarrow> card (nodes_stree t) = Suc (card (tree_graph_edges t))"
 proof (induction t rule: tree_graph_edges.induct)
   case (1 a ts)
   let ?t = "SNode a ts"
-  have distinct_edges: "distinct_edges ?t" using distinct_nodes_distinct_edges 1(2) by blast
-  then have card_root_edges: "card ((\<lambda>t. {a, root_stree t}) ` fset ts) = card (fset ts)" using card_image by auto
+  have "inj_on (\<lambda>t. {a, root_stree t}) (fset ts)" using distinct_nodes_inj_on_root_stree[OF 1(2)]
+    unfolding inj_on_def doubleton_eq_iff by blast
+  then have card_root_edges: "card ((\<lambda>t. {a, root_stree t}) ` fset ts) = card (fset ts)"
+    using card_image by blast
   have finite_Un: "finite (\<Union>t\<in>fset ts. nodes_stree t)" using finite_Union finite_nodes_stree finite_fset by auto
   then have "card (nodes_stree ?t) = Suc (card (\<Union>t\<in>fset ts. nodes_stree t))" using 1(2) card_insert_disjoint finite_Un by simp
   also have "\<dots> = Suc (\<Sum>t\<in>fset ts. card (nodes_stree t))" using 1(2) card_UN_disjoint' finite_nodes_stree finite_fset by fastforce
   also have "\<dots> = Suc (\<Sum>t\<in>fset ts. Suc (card (tree_graph_edges t)))" using 1 by simp
   also have "\<dots> = Suc (card (fset ts) + (\<Sum>t\<in>fset ts. card (tree_graph_edges t)))" by (metis add.commute sum_Suc)
-  also have "\<dots> = Suc (card ((\<lambda>t. {a, root_stree t}) ` fset ts) + (\<Sum>t\<in>fset ts. card (tree_graph_edges t)))" using card_root_edges by simp
+  also have "\<dots> = Suc (card ((\<lambda>t. {a, root_stree t}) ` fset ts) + (\<Sum>t\<in>fset ts. card (tree_graph_edges t)))"
+    using card_root_edges by simp
   also have "\<dots> = Suc (card ((\<lambda>x. {a, root_stree x}) ` fset ts) + card (\<Union> (tree_graph_edges ` fset ts)))"
-    using distinct_edges card_UN_disjoint' finite_tree_graph_edges by fastforce
+    using distinct_nodes_disjoint_edges[OF 1(2)] card_UN_disjoint' finite_tree_graph_edges by fastforce
   also have "\<dots> = Suc (card ((\<lambda>x. {a, root_stree x}) ` fset ts \<union> (\<Union> (tree_graph_edges ` fset ts))))" (is "Suc (card ?r + card ?Un) = Suc (card (?r \<union> ?Un))")
   proof-
-    have disjnt: "disjnt ?r ?Un" using disjoint_UN_iff distinct_edges by auto
+    have "\<forall>t \<in> fset ts. \<forall>e \<in> tree_graph_edges t. a \<notin> e" using 1(2) tree_graph_edges_wf by auto
+    then have disjnt: "disjnt ?r ?Un" using disjoint_UN_iff by (auto simp: disjnt_def)
     show ?thesis using card_Un_disjnt[OF _ _ disjnt] finite_tree_graph_edges by fastforce
   qed
   finally show ?case by simp
@@ -801,7 +805,6 @@ lemma card_tree_graph: "tree_graph t = (V,E,r) \<Longrightarrow> card V = tree_s
   unfolding tree_graph_def using ltree_size_postorder_label stree_size_stree_ltree card_tree_graph_stree
   by (metis distinct_nodes_postorder_label distinct_nodes_stree_ltree)
 
-text \<open>tree_graph is surjective with respect to isomorphism\<close>
 
 lemma [termination_simp]: "(t, s) \<in> set (zip ts ss) \<Longrightarrow> size t < Suc (size_list size ts)"
   by (metis less_not_refl not_less_eq set_zip_leftD size_list_estimation)
@@ -1032,7 +1035,7 @@ lemma (in rtree) tree_of_graph_regular_n_tree: "tree_ltree (ltree_stree (stree_o
 proof-
   have size_t: "tree_size ?t = card V" by (simp del: stree_of_graph.simps)
   have "regular ?t" using regular_ltree_stree regular_tree_ltree by blast
-  then show ?thesis using size_t unfolding regular_n_trees_def n_trees_def by blast
+  then show ?thesis using size_t unfolding regular_n_trees_def by blast
 qed
 
 lemma (in rtree) ex_regular_n_tree: "\<exists>t\<in>regular_n_trees (card V). tree_graph t \<simeq>\<^sub>r (V,E,r)"
