@@ -1,3 +1,69 @@
-\chapter{Graphs and Trees in Isabelle}\label{chapter:isabelle_graphs}
+\chapter{Formalization of Graph Theoretic Results}\label{chapter:isabelle_graphs}
 
-Graph library \cite{Undirected_Graph_Theory-AFP}
+In the previous chapters, the main focus was on the algorithms at hand and the approach to formalize them.
+While we mentioned some graph theoretic definitions we took well known definitions and lemmas on trees and graphs for granted.
+Some results were already formalized by the undirected graph library but further ones were needed for this project.
+This chapter tries to summarize some graph theoretic results that were formalized in the process.
+These are well suited to be reused in other projects.
+
+We already discussed the definition of trees as acyclic, connected graphs.
+We also prove the standard definition of leaves as vertices of degree 1.
+When proving properties of trees it is often useful to prove them by induction on the number of vertices.
+To do this we show that removing a leaf from a tree results in another tree.
+To simplify proving properties on trees inductively we provide a custom induction rule.
+One then only needs to prove the property for the singleton tree and that the property is preserved when adding a new leaf.
+
+\begin{isabellebox}
+    \isacommand{lemma}\isamarkupfalse%
+    \ tree{\isacharunderscore}{\kern0pt}induct\ {\isacharbrackleft}{\kern0pt}case{\isacharunderscore}{\kern0pt}names\ singolton\ insert{\isacharcomma}{\kern0pt}\ induct\ set{\isacharcolon}{\kern0pt}\ tree{\isacharbrackright}{\kern0pt}{\isacharcolon}{\kern0pt}\isanewline
+    \ \ \isakeyword{assumes}\ tree{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}tree\ V\ E{\isachardoublequoteclose}\isanewline
+    \ \ \ \ \isakeyword{and}\ trivial{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}{\isasymAnd}v{\isachardot}{\kern0pt}\ tree\ {\isacharbraceleft}{\kern0pt}v{\isacharbraceright}{\kern0pt}\ {\isacharbraceleft}{\kern0pt}{\isacharbraceright}{\kern0pt}\ {\isasymLongrightarrow}\ P\ {\isacharbraceleft}{\kern0pt}v{\isacharbraceright}{\kern0pt}\ {\isacharbraceleft}{\kern0pt}{\isacharbraceright}{\kern0pt}{\isachardoublequoteclose}\isanewline
+    \ \ \ \ \isakeyword{and}\ insert{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}{\isasymAnd}l\ v\ V\ E{\isachardot}{\kern0pt}\ tree\ V\ E\ {\isasymLongrightarrow}\ P\ V\ E\ {\isasymLongrightarrow}\ l\ {\isasymnotin}\ V\ {\isasymLongrightarrow}\ v\ {\isasymin}\ V\ {\isasymLongrightarrow}\isanewline
+    \ \ \ \ \ \ {\isacharbraceleft}{\kern0pt}l{\isacharcomma}{\kern0pt}v{\isacharbraceright}{\kern0pt}\ {\isasymnotin}\ E\ {\isasymLongrightarrow}\ tree{\isachardot}{\kern0pt}leaf\ {\isacharparenleft}{\kern0pt}insert\ {\isacharbraceleft}{\kern0pt}l{\isacharcomma}{\kern0pt}v{\isacharbraceright}{\kern0pt}\ E{\isacharparenright}{\kern0pt}\ l\ {\isasymLongrightarrow}\isanewline
+    \ \ \ \ \ \ P\ {\isacharparenleft}{\kern0pt}insert\ l\ V{\isacharparenright}{\kern0pt}\ {\isacharparenleft}{\kern0pt}insert\ {\isacharbraceleft}{\kern0pt}l{\isacharcomma}{\kern0pt}v{\isacharbraceright}{\kern0pt}\ E{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}\isanewline
+    \ \ \isakeyword{shows}\ {\isachardoublequoteopen}P\ V\ E{\isachardoublequoteclose}
+\end{isabellebox}
+
+With the additional assumptions in the inductive step, proofs of properties on trees, such as that a tree with $n$ vertices has $n-1$ edges, can be simplified a great deal.
+
+When proving that a graph is a tree, arguing about acyclicity is in many cases difficult as it can require one to argue about all possible paths in the graphs.
+Instead, like in Section \ref{section:labeled_tree_enum_correct}, we use the well-known fact that a connected graph with $n$ vertices and $n-1$ edges is a tree.
+This lemma turns out to require a fair bit of setup.
+First, we define a spanning tree of a graph $G$ to a subgraph of $G$ that is a tree and that contains all vertices of $G$.
+
+\begin{isabellebox}
+    \isacommand{locale}\isamarkupfalse%
+    \ spanning{\isacharunderscore}{\kern0pt}tree\ {\isacharequal}{\kern0pt}\ ulgraph\ V\ E\ {\isacharplus}{\kern0pt}\ T{\isacharcolon}{\kern0pt}\ tree\ V\ T\ \isakeyword{for}\ V\ E\ T\ {\isacharplus}{\kern0pt}\isanewline
+    \ \ \isakeyword{assumes}\ subgraph{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}T\ {\isasymsubseteq}\ E{\isachardoublequoteclose}
+\end{isabellebox}
+
+Next, we prove that every finite, connected graph has a spanning tree.
+This is done inductively by removing edges of cycles, which keeps the graph connected, until the graph is acyclic.
+Now to prove the lemma we were interested in initially, that every connected graph with $n$ vertices and $n-1$ edges is a tree,
+let us assume for contradiction that there exists such a graph that is not a tree.
+As the graph is connected, it has a spanning tree and since it is not a tree itself, the spanning tree has to be a strict subgraph.
+Since a spanning tree is a tree it has $n-1$ edges by the statement proven earlier.
+That means the original graph has more than $n-1$ edges, which is a contradiction.
+That concludes the proof.
+
+Another concept that had not yet been formalized is connected components.
+This was required for rooted trees, where removing the root node leaves the principal subtrees as connected components.
+For a formal definition we first define a relation on nodes that indicates connectivity.
+
+\begin{isabellebox}
+    \isacommand{abbreviation}\isamarkupfalse%
+    \ {\isachardoublequoteopen}vert{\isacharunderscore}{\kern0pt}connected{\isacharunderscore}{\kern0pt}rel\ {\isasymequiv}\ {\isacharbraceleft}{\kern0pt}{\isacharparenleft}{\kern0pt}u{\isacharcomma}{\kern0pt}v{\isacharparenright}{\kern0pt}{\isachardot}{\kern0pt}\ vert{\isacharunderscore}{\kern0pt}connected\ u\ v{\isacharbraceright}{\kern0pt}{\isachardoublequoteclose}
+\end{isabellebox}
+
+We prove this to be an equivalence relation and define connected components to be the equivalence classes of this relation.
+
+\begin{isabellebox}
+    \isacommand{definition}\isamarkupfalse%
+    \ connected{\isacharunderscore}{\kern0pt}components\ {\isacharcolon}{\kern0pt}{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}{\isacharprime}{\kern0pt}a\ set\ set{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
+    \ \ {\isachardoublequoteopen}connected{\isacharunderscore}{\kern0pt}components\ {\isacharequal}{\kern0pt}\ V\ {\isacharslash}{\kern0pt}{\isacharslash}{\kern0pt}\ vert{\isacharunderscore}{\kern0pt}connected{\isacharunderscore}{\kern0pt}rel{\isachardoublequoteclose}
+\end{isabellebox}
+
+A couple of interesting properties of connected components that were needed for the project were proven as well.
+
+Additionally, There are dozens more lemmas for graphs, paths, connectivity, subgraphs, vertex degrees etc. which are not described in detail here.
+The interested reader is referred to the Archive of Formal Proofs entry for the full development.

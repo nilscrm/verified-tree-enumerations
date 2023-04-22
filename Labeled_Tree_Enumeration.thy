@@ -1,4 +1,4 @@
-theory Labeled_Tree_Enumeration2
+theory Labeled_Tree_Enumeration
   imports Tree_Graph Combinatorial_Enumeration_Algorithms.n_Sequences
 begin
 

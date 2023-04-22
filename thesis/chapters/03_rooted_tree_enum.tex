@@ -19,7 +19,7 @@ Similarly, a rooted tree is a tree with a fixed root.
 
 As can be seen in the definition the nodes of rooted graphs are still labeled.
 To get a notion of unlabeled trees we define isomorphism on these graphs.
-A graph isomorphism for (unrooted) graphs is a bijection between the vertex sets of two graph which preserves edge connectivity.
+A graph isomorphism for (unrooted) graphs is a bijection between the vertex sets of two graphs which preserves edge connectivity.
 
 \begin{isabellebox}
 \isacommand{locale}\isamarkupfalse%
@@ -49,7 +49,7 @@ The idea of the algorithm is based on one described by Beyer and Hedetniemi \par
 It works on ordered, rooted trees.
 An ordered, rooted tree is a rooted tree with a linear order with which subtrees can be ordered.
 We will represent such a tree graphically as in Figure \ref{fig:example_rooted_trees} by drawing the root node at the top and the subtrees in the corresponding order beneath it.
-Since we are interested in unlabeled trees node labels will generally be omitted.
+Since we are interested in unlabeled trees, node labels will generally be omitted.
 The two trees shown differ in the ordering of their subtrees but represent the same underlying rooted tree.
 Of the possibly many ordered trees corresponding to a rooted tree, one canonical tree will be defined.
 For this, a linear order will be defined on ordered rooted trees.
@@ -335,7 +335,7 @@ A rooted ordered tree is regular iff the subtrees are ordered with respect to th
 To prove correctness we first show that the algorithm enumerates all regular ordered rooted trees and then that the set of regular ordered rooted trees is equivalent to the set of rooted trees modulo isomorphism.
 
 By simple induction all defined functions can be shown to preserve regularity. In addition to that, $next\_tree$ preserves the size of the tree, again by induction and simple auxiliary lemmas on the size of the output of the defined function.
-Since $greatest\_tree\ n$ is regular and of size $n$, the algorithms produces only regular trees of size $n$.
+Since $greatest\_tree\ n$ is regular and of size $n$, the algorithm produces only regular trees of size $n$.
 Due to the strict monotonicity of $next\_tree$ proven earlier it immediately follows that no tree is generated twice.
 In addition, we prove that there is a unique minimal tree of size $n$, namely the tree consisting of a root node and $n-1$ singleton subtrees.
 The enumeration stops only if this minimal tree is reached.
@@ -384,20 +384,20 @@ Moreover, let $C$ be the set of connected components of $T - \{r\}$ (the tree wi
 Then one can generate unordered unlabeled trees for each connected component recursively by taking the unique vertex in it that is connected to $r$ as its root.
 The sorted list of these trees will be the subtrees of $t$.
 This construction results in a regular tree $t$ such that $G_t$ is isomorphic to $T$.
-Denote this tree by $t(T)$
+Denote this tree by $t(T)$.
 
-The remaining step to show uniqueness is to show that $G_{t_1}$ and $G_{t_2}$ are not isomorphic for two distinct regular trees $t_1$ and $t_2$.
-One can prove that $t(G_t) = t$ for all regular trees t.
-Also, since the construction of $t(T)$ does not depend on the labels of the nodes, $t(G_{t_1}) = t(G_{t_2})$.
-This means
-\[
-    t1 = t(G_{t_1}) = t(G_{t_2}) = t2
-\]
-which is a contradiction to the assumption that $t_1$ and $t_2$ are distinct.
+The remaining step to show uniqueness is to show that $G_{t_1}$ and $G_{t_2}$ are not isomorphic for two distinct regular trees $t_1$ and $t_2$, or equivalently that $t_1 = t_2$ is implied by $G_{t_1}$ and $G_{t_2}$ being isomorphic.
 \begin{isabellebox}
     \isacommand{lemma}\isamarkupfalse%
     {\kern0pt}\ {\isachardoublequoteopen}regular\ t{\isadigit{1}}\ {\isasymLongrightarrow}\ regular\ t{\isadigit{2}}\ {\isasymLongrightarrow}\ G\isactrlsub {t{\isadigit{1}}}\ {\isasymsimeq}\isactrlsub r\ G\isactrlsub {t{\isadigit{2}}}\ {\isasymLongrightarrow}\ t{\isadigit{1}}\ {\isacharequal}{\kern0pt}\ t{\isadigit{2}}{\isachardoublequoteclose}
 \end{isabellebox}
+One can prove that $t(G_t) = t$ for all regular trees t.
+Also, since the construction of $t(T)$ does not depend on the labels of the nodes, but only on the structure of the tree, we have $t(G_{t_1}) = t(G_{t_2})$ since $G_{t_1}$ and $G_{t_2}$ are isomorphic.
+This means
+\[
+    t1 = t(G_{t_1}) = t(G_{t_2}) = t2
+\]
+which finishes the proof.
 
 This concludes the entire proof and shows that the described algorithm generates each tree exactly once modulo isomorphic, that is it generates all unlabeled rooted trees.
 

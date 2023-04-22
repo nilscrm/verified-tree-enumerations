@@ -755,7 +755,7 @@ sublocale fin_connected_sgraph
 
 end
 
-locale spanning_tree = fin_ulgraph V E + T: tree V T for V E T +
+locale spanning_tree = ulgraph V E + T: tree V T for V E T +
   assumes subgraph: "T \<subseteq> E"
 
 lemma (in fin_connected_ulgraph) has_spanning_tree: "\<exists>T. spanning_tree V E T"
@@ -786,7 +786,7 @@ next
       by (metis connected_ulgraph_def cycle fin_connected_ulgraph_def fin_graph_system.intro fin_graph_system_axioms.intro fin_ulgraph.intro ulgraph_def)
     have "{u,v} \<in> edges" using cycle unfolding c g.is_cycle2_def g.is_cycle_alt g.is_walk_def by auto
     then obtain T where "spanning_tree V (edges - {{u,v}}) T" using Suc card_Diff_singleton g' by fastforce
-    then have "spanning_tree V edges T" unfolding spanning_tree_def spanning_tree_axioms_def using g.fin_ulgraph_axioms by blast
+    then have "spanning_tree V edges T" unfolding spanning_tree_def spanning_tree_axioms_def using g.ulgraph_axioms by blast
     then show ?thesis by blast
   qed
 qed
