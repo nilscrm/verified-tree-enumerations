@@ -289,7 +289,7 @@ definition regular_n_trees :: "nat \<Rightarrow> tree set" where
   "regular_n_trees n = {t. tree_size t = n \<and> regular t}"
 
 
-subsection \<open>Rooted graphs\<close>
+subsection \<open>Rooted Graphs\<close>
 
 type_synonym 'a rpregraph = "('a set) \<times> ('a edge set) \<times> 'a" 
 
@@ -352,6 +352,8 @@ qed
 
 end
 
+subsection \<open>Rooted Graph Isomorphism\<close>
+
 fun app_rgraph_isomorphism :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a rpregraph \<Rightarrow> 'b rpregraph" where
   "app_rgraph_isomorphism f (V,E,r) = (f ` V, ((`) f) ` E, f r)"
 
@@ -401,6 +403,7 @@ lemma (in rtree) rgraph_isomorphis_app_iso: "inj_on f V \<Longrightarrow> app_rg
 lemma (in rtree) rgraph_isomorph_app_iso: "inj_on f V \<Longrightarrow> (V, E, r) \<simeq>\<^sub>r app_rgraph_isomorphism f (V, E, r)"
   using rgraph_isomorphis_app_iso by fastforce
 
+subsection \<open>Conversion between unlabeled, ordered, rooted trees and tree graphs\<close>
 
 datatype 'a ltree = LNode 'a "'a ltree list"
 
@@ -497,8 +500,6 @@ definition tree_graph :: "tree \<Rightarrow> nat rpregraph" where
 fun relabel_stree :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a stree \<Rightarrow> 'b stree" where
   "relabel_stree f (SNode r ts) = SNode (f r) ((relabel_stree f) |`| ts)"
 
-subsection \<open>ltree lemmas\<close>
-
 lemma root_ltree_wf: "root_ltree t \<in> nodes_ltree t"
   by (cases t) auto
 
@@ -510,8 +511,6 @@ lemma nodes_relabel_ltree[simp]: "nodes_ltree (relabel_ltree f t) = f ` nodes_lt
 
 lemma finite_nodes_ltree: "finite (nodes_ltree t)"
   by (induction t) auto
-
-subsection \<open>stree lemmas\<close>
 
 lemma root_stree_wf: "root_stree t \<in> nodes_stree t"
   by (cases t) auto
@@ -1175,7 +1174,7 @@ proof-
   then show ?thesis using inj by blast
 qed
 
-text \<open>Skip the ltree representation as it introduces complications with the proof\<close>
+text \<open>Skip the ltree representation as it introduces complications with the proofs\<close>
 
 fun tree_stree :: "'a stree \<Rightarrow> tree" where
   "tree_stree (SNode r ts) = Node (sorted_list_of_multiset (image_mset tree_stree (mset_set (fset ts))))"

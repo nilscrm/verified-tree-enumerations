@@ -1,10 +1,10 @@
-section \<open>Trees\<close>
+section \<open>Graphs and Trees\<close>
 
 theory Tree_Graph
   imports Undirected_Graph_Theory.Undirected_Graphs_Root
 begin
 
-subsection \<open>Misc\<close>
+subsection \<open>Miscellaneous\<close>
 
 definition (in ulgraph) loops :: "'a edge set" where
   "loops = {e\<in>E. is_loop e}"
@@ -1074,6 +1074,8 @@ proof-
     (auto simp: is_connected_set_def vert_connected_id vert_connected_neighbors vert_connected_rev)
   then show ?thesis using card_E_treeI \<open>u\<noteq>v\<close> by fastforce
 qed
+
+subsection \<open>Graph Isomorphism\<close>
 
 locale graph_isomorphism =
   G: graph_system V\<^sub>G E\<^sub>G for V\<^sub>G E\<^sub>G +

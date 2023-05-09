@@ -1,6 +1,11 @@
+section \<open>Enumeration of Rooted Trees\<close>
+
 theory Rooted_Tree_Enumeration
   imports Rooted_Tree
 begin
+
+text \<open>Algorithm inspired by works of Beyer and Hedetniemi~\cite{beyer}, performing the same
+  operations but directly on a recursive tree data structure instead of level sequences.\<close>
 
 definition n_rtree_graphs :: "nat \<Rightarrow> nat rpregraph set" where
   "n_rtree_graphs n = {(V,E,r). rtree V E r \<and> card V = n}"

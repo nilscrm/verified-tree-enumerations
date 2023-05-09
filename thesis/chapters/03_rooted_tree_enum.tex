@@ -1,6 +1,6 @@
 \chapter{Enumeration of Unlabeled Rooted Trees}\label{chapter:rootred_tree_enum}
 
-This Chapter describes the verification of an algorithm enumerating all unlabeled rooted trees with a specific number of nodes.
+This Chapter describes the verification of an algorithm enumerating all unlabeled, rooted trees with a specific number of nodes.
 Let $G = (V,E,r)$ denote the rooted graph with vertex set $V$, edge set $E$ and a distinguished root $r \in V$.
 
 \begin{isabellebox}
@@ -39,6 +39,8 @@ Similarly, graph isomorphism is defined on rooted graphs with the additional req
     \ \ \isakeyword{assumes}\ root{\isacharunderscore}{\kern0pt}preserving{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}f\ r\isactrlsub G\ {\isacharequal}{\kern0pt}\ r\isactrlsub H{\isachardoublequoteclose}
 \end{isabellebox}
 
+Two rooted trees $T_1$ and $T_2$ are isomorphic (denoted with $T_1 \simeq_r T_2$) if there exists an isomorphism between them.
+
 The algorithm described here produces a list of all rooted trees with n vertices modulo isomorphism.
 That is, every rooted tree is isomorphic to exactly one rooted tree in the resulting list.
 
@@ -52,18 +54,18 @@ We will represent such a tree graphically as in Figure \ref{fig:example_rooted_t
 Since we are interested in unlabeled trees, node labels will generally be omitted.
 The two trees shown differ in the ordering of their subtrees but represent the same underlying rooted tree.
 Of the possibly many ordered trees corresponding to a rooted tree, one canonical tree will be defined.
-For this, a linear order will be defined on ordered rooted trees.
-First we define the type of ordered rooted trees as the root node with a list of ordered subtrees.
+For this, a linear order will be defined on ordered, rooted trees recursively.
+First we define the type of ordered, rooted trees as a root node with a list of ordered subtrees.
 
 \begin{isabellebox}
 \isacommand{datatype}\isamarkupfalse%
 \ tree\ {\isacharequal}{\kern0pt}\ Node\ {\isachardoublequoteopen}tree\ list{\isachardoublequoteclose}
 \end{isabellebox}
 
-This order defined on these trees will be the reversed lexicographical ordering.
+The order defined on these trees will be the reversed lexicographical ordering.
 No tree is smaller than the singleton tree (a tree only containing a root node).
 The singleton tree is smaller than every other tree besides itself.
-Otherwise, the subtrees are compared element wise from the back.
+Otherwise, the subtrees are compared elementwise from the back.
 To simplify the definition in a functional setting, we first define the regular lexicographical order on trees and then define the desired ordering by mirroring its arguments.
 
 \begin{figure}[htpb]
@@ -319,12 +321,22 @@ one starts with the greatest tree on $n$ nodes and repeatedly calls $next\_tree$
 
 To prove termination of the enumeration we show that the output of $next\_tree$ (if it is not $None$) is strictly smaller than its input and that there are only finitely many rooted trees with $n$ nodes.
 
+To determine the runtime of the algorithm let $N$ be the number of rooted trees of size $n$.
+Then \texttt{next\_tree} is called $N$ times during the enumeration of all trees.
+\texttt{next\_tree} traverses each node at most once and since \texttt{fill\_tree} runs in linear time with respect to the number of nodes produced, \texttt{next\_tree} runs in $O(n)$.
+Thus the runtime of the algorithm is $O(n * N)$.
+Beyer and Hedetniemi \parencite{beyer} prove that their imperative implementation of \texttt{next\_tree} runs on average in constant time over all $N$ calls.
+This means their algorithm runs in $O(N)$ time.
+Even if the implementation presented here performs the same operations on the tree, it traverses some extra nodes while doing so.
+This means the result cannot be transferred directly.
+However, it may well be possible to show a better bound or perhaps even $O(N)$ here as well with a more careful analysis, as on average still only a small portion of nodes is actually traversed.
+
 \section{Proof of correctness}
 
 \subsection{Totality}
 
 Instead of working with canonical rooted trees, we work with an alternative (equivalent) definition of regularity.
-A rooted ordered tree is regular iff the subtrees are ordered with respect to the linear order previously defined and all subtrees are regular themselves.
+An ordered, rooted tree is regular iff the subtrees are ordered with respect to the linear order previously defined and all subtrees are regular themselves.
 
 \begin{isabellebox}
     \isacommand{fun}\isamarkupfalse%
@@ -332,24 +344,24 @@ A rooted ordered tree is regular iff the subtrees are ordered with respect to th
     \ \ {\isachardoublequoteopen}regular\ {\isacharparenleft}{\kern0pt}Node\ ts{\isacharparenright}{\kern0pt}\ {\isasymlongleftrightarrow}\ sorted\ ts\ {\isasymand}\ {\isacharparenleft}{\kern0pt}{\isasymforall}t{\isasymin}set\ ts{\isachardot}{\kern0pt}\ regular\ t{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}
 \end{isabellebox}
 
-To prove correctness we first show that the algorithm enumerates all regular ordered rooted trees and then that the set of regular ordered rooted trees is equivalent to the set of rooted trees modulo isomorphism.
+To prove correctness we first show that the algorithm enumerates all regular ordered, rooted trees and then that the set of regular ordered rooted trees is equivalent to the set of rooted trees modulo isomorphism.
 
-By simple induction all defined functions can be shown to preserve regularity. In addition to that, $next\_tree$ preserves the size of the tree, again by induction and simple auxiliary lemmas on the size of the output of the defined function.
-Since $greatest\_tree\ n$ is regular and of size $n$, the algorithm produces only regular trees of size $n$.
-Due to the strict monotonicity of $next\_tree$ proven earlier it immediately follows that no tree is generated twice.
+By simple induction all defined functions can be shown to preserve regularity. In addition to that, \texttt{next\_tree} preserves the size of the tree, again by induction and simple auxiliary lemmas on the size of the output of the defined auxiliary functions.
+Since \mbox{\texttt{greatest\_tree n}} is regular and of size $n$, the algorithm produces only regular trees of size $n$.
+Due to the strict monotonicity of \texttt{next\_tree} proven earlier it immediately follows that no tree is generated twice.
 In addition, we prove that there is a unique minimal tree of size $n$, namely the tree consisting of a root node and $n-1$ singleton subtrees.
 The enumeration stops only if this minimal tree is reached.
 What is left to prove is that the algorithm does not skip any regular rooted tree.
 For this some auxiliary lemmas are needed.
-First, observe that due to the order in which $trim\_tree$ removes nodes, $trim\_tree\ n\ t$ is the greatest tree with at most $n$ nodes that is smaller or equal to $t$.
-This also means that a tree which has as subtrees the list of trees generated by $fill\_tree\ n\ t$ is the greatest tree of size $n + 1$ (observe the additional root node) where every subtree is smaller or equal to $t$.
-Now to get an intuition of why $next\_tree$ generates the next smallest tree consider counting down numbers as an analogy.
+First, observe that due to the order in which \texttt{trim\_tree} removes nodes, \texttt{trim\_tree n t} is the greatest tree with at most $n$ nodes that is smaller or equal to $t$.
+This also means that a tree which has as subtrees the list of trees generated by \texttt{fill\_tree\ n\ t} is the greatest tree of size $n + 1$ (observe the additional root node) where every subtree is smaller or equal to $t$.
+Now to get an intuition of why \texttt{next\_tree} generates the next smallest tree consider counting down numbers as an analogy.
 When counting down from $14200$ one tries to decrease the rightmost digit that can be decreased, i.e. the 2.
 Then set the digits to the right of the decreased number to their maximum resulting in $14199$.
 
 Since subtrees are compared in reverse order, the leftmost subtree that can be decreased (i.e. is not a singleton) will be decreased by removing its leftmost leaf.
-Then using $fill\_tree$ the subtree left to the decreased tree is maximized.
-This argument can be made formal by induction on the $next\_tree$ and with some technicalities we omit here.
+Then using \texttt{fill\_tree} the subtree left to the decreased tree is maximized.
+This argument can be made formal by induction on \texttt{next\_tree} and with some technicalities we omit here.
 Thus, we have proven that all regular trees of size $n$ are enumerated by the algorithm.
 
 \begin{isabellebox}
@@ -367,15 +379,15 @@ Thus, we have proven that all regular trees of size $n$ are enumerated by the al
 
 \subsection{Distinctness modulo Isomorphism}
 
-In order for the algorithm to meet its specification we need to show that the regular ordered rooted trees are equivalent to all rooted trees.
-We define a function to map an ordered unlabeled rooted tree to a rooted labeled tree in graph form.
+In order for the algorithm to meet its specification we need to show that the regular, ordered, rooted trees are equivalent to all rooted trees.
+We define a function to map an ordered, unlabeled, rooted tree to a rooted, labeled tree in graph form.
 This is done via two additional intermediate steps which simplify the proofs.
-First we define ordered rooted labeled trees which are like ordered rooted trees except that each node has a label associated with it.
+First we define ordered, rooted, labeled trees which are like ordered, rooted trees except that each node has a label associated with it.
 A function is defined to label the nodes of an unlabeled tree.
 This can be done arbitrarily as long as the nodes have different labels since any labeling will produce an isomorphic tree.
-Next we define unordered labeled trees where the subtrees of a node are represented as a finite set instead of an ordered list.
-As the last step one can transform an unordered labeled tree $t$ into its graph representation simply by the graph $G = (V,E)$ where $V$ is the set of nodes in $t$ and $E$ contains an edge for every node to the roots of its subtrees.
-Let $t$ be an ordered unlabeled rooted tree, then $G_t$ denotes the graph representation of $t$.
+Next we define unordered, labeled trees where the subtrees of a node are represented as a finite set instead of an ordered list.
+As the last step one can transform an unordered, labeled tree $t$ into its graph representation simply by the graph $G = (V,E)$ where $V$ is the set of nodes in $t$ and $E$ contains an edge for every node to the roots of its subtrees.
+Let $t$ be an ordered, unlabeled, rooted tree, then $G_t$ denotes the graph representation of $t$.
 It can be shown that $G_t$ is indeed a tree, i.e. connected and acyclic.
 
 We now want to show for every tree graph $T$ there exists exactly one $t$ such that $T$ and $G_t$ are isomorphic.
@@ -399,7 +411,7 @@ This means
 \]
 which finishes the proof.
 
-This concludes the entire proof and shows that the described algorithm generates each tree exactly once modulo isomorphic, that is it generates all unlabeled rooted trees.
+This concludes the entire proof and shows that the described algorithm generates each tree exactly once modulo isomorphism, that is it generates all unlabeled, rooted trees.
 
 \begin{isabellebox}
     \isacommand{theorem}\isamarkupfalse%

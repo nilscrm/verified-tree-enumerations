@@ -61,11 +61,11 @@ The following function \texttt{prufer\_seq\_of\_tree} implements this algorithm.
 
 This function describes how Prüfer sequences are constructed and is relevant for the correctness proof, but for the actual enumeration algorithm the inverse operation is needed.
 The following function \texttt{tree\_of\_prufer\_seq} constructs the tree given a Prüfer sequence.
-It takes as input a list of $n$ vertices, as \texttt{prufer\_seq\_of\_tree} does, and a Prüfer sequences of length $n - 2$ and works in the following steps:
+It takes as input the list of all $n$ vertices, as \texttt{prufer\_seq\_of\_tree} does, and a Prüfer sequences of length $n - 2$ and works in the following steps:
 
 \begin{enumerate}
-    \item If the Prüfer sequence is empty, the result is a tree containing the two vertices of the input connected by an edge.
-    \item Otherwise, let $a$ be the smallest vertex not contained in the Prüfer sequence and $b$ the first element of the Prüfer sequence and $s$ the remaining elements.
+    \item If the Prüfer sequence is empty, the result is a tree containing the two remaining vertices connected by an edge.
+    \item Otherwise, let $a$ be the smallest vertex not contained in the Prüfer sequence, $b$ the first element of the Prüfer sequence and $s$ the remaining elements.
     \item Remove $a$ from the list of vertices and construct the tree of the Prüfer sequence $s$ recursively.
     \item Add the vertex $a$ with an edge from $a$ to $b$ to the tree.
 \end{enumerate}
@@ -74,9 +74,9 @@ It takes as input a list of $n$ vertices, as \texttt{prufer\_seq\_of\_tree} does
     \isacommand{fun}\isamarkupfalse%
     \ tree{\isacharunderscore}{\kern0pt}edges{\isacharunderscore}{\kern0pt}of{\isacharunderscore}{\kern0pt}prufer{\isacharunderscore}{\kern0pt}seq\ {\isacharcolon}{\kern0pt}{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}{\isacharprime}{\kern0pt}a\ list\ {\isasymRightarrow}\ {\isacharprime}{\kern0pt}a\ list\ {\isasymRightarrow}\ {\isacharprime}{\kern0pt}a\ edge\ set{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
     \ \ {\isachardoublequoteopen}tree{\isacharunderscore}{\kern0pt}edges{\isacharunderscore}{\kern0pt}of{\isacharunderscore}{\kern0pt}prufer{\isacharunderscore}{\kern0pt}seq\ {\isacharbrackleft}{\kern0pt}u{\isacharcomma}{\kern0pt}v{\isacharbrackright}{\kern0pt}\ {\isacharbrackleft}{\kern0pt}{\isacharbrackright}{\kern0pt}\ {\isacharequal}{\kern0pt}\ {\isacharbraceleft}{\kern0pt}{\isacharbraceleft}{\kern0pt}u{\isacharcomma}{\kern0pt}v{\isacharbraceright}{\kern0pt}{\isacharbraceright}{\kern0pt}{\isachardoublequoteclose}\isanewline
-    {\isacharbar}{\kern0pt}\ {\isachardoublequoteopen}tree{\isacharunderscore}{\kern0pt}edges{\isacharunderscore}{\kern0pt}of{\isacharunderscore}{\kern0pt}prufer{\isacharunderscore}{\kern0pt}seq\ verts\ {\isacharparenleft}{\kern0pt}a{\isacharhash}{\kern0pt}seq{\isacharparenright}{\kern0pt}\ {\isacharequal}{\kern0pt}\isanewline
-    \ \ \ \ {\isacharparenleft}{\kern0pt}case\ find\ {\isacharparenleft}{\kern0pt}{\isasymlambda}x{\isachardot}{\kern0pt}\ x\ {\isasymnotin}\ set\ {\isacharparenleft}{\kern0pt}a{\isacharhash}{\kern0pt}seq{\isacharparenright}{\kern0pt}{\isacharparenright}{\kern0pt}\ verts\ of\isanewline
-    \ \ \ \ \ \ Some\ b\ {\isasymRightarrow}\ insert\ {\isacharbraceleft}{\kern0pt}a{\isacharcomma}{\kern0pt}b{\isacharbraceright}{\kern0pt}\ {\isacharparenleft}{\kern0pt}tree{\isacharunderscore}{\kern0pt}edges{\isacharunderscore}{\kern0pt}of{\isacharunderscore}{\kern0pt}prufer{\isacharunderscore}{\kern0pt}seq\ {\isacharparenleft}{\kern0pt}remove{\isadigit{1}}\ b\ verts{\isacharparenright}{\kern0pt}\ seq{\isacharparenright}{\kern0pt}{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}\isanewline
+    {\isacharbar}{\kern0pt}\ {\isachardoublequoteopen}tree{\isacharunderscore}{\kern0pt}edges{\isacharunderscore}{\kern0pt}of{\isacharunderscore}{\kern0pt}prufer{\isacharunderscore}{\kern0pt}seq\ verts\ {\isacharparenleft}{\kern0pt}b{\isacharhash}{\kern0pt}seq{\isacharparenright}{\kern0pt}\ {\isacharequal}{\kern0pt}\isanewline
+    \ \ \ \ {\isacharparenleft}{\kern0pt}case\ find\ {\isacharparenleft}{\kern0pt}{\isasymlambda}x{\isachardot}{\kern0pt}\ x\ {\isasymnotin}\ set\ {\isacharparenleft}{\kern0pt}b{\isacharhash}{\kern0pt}seq{\isacharparenright}{\kern0pt}{\isacharparenright}{\kern0pt}\ verts\ of\isanewline
+    \ \ \ \ \ \ Some\ a\ {\isasymRightarrow}\ insert\ {\isacharbraceleft}{\kern0pt}a{\isacharcomma}{\kern0pt}b{\isacharbraceright}{\kern0pt}\ {\isacharparenleft}{\kern0pt}tree{\isacharunderscore}{\kern0pt}edges{\isacharunderscore}{\kern0pt}of{\isacharunderscore}{\kern0pt}prufer{\isacharunderscore}{\kern0pt}seq\ {\isacharparenleft}{\kern0pt}remove{\isadigit{1}}\ a\ verts{\isacharparenright}{\kern0pt}\ seq{\isacharparenright}{\kern0pt}{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}\isanewline
     \isanewline
     \isacommand{definition}\isamarkupfalse%
     \ tree{\isacharunderscore}{\kern0pt}of{\isacharunderscore}{\kern0pt}prufer{\isacharunderscore}{\kern0pt}seq\ {\isacharcolon}{\kern0pt}{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}{\isacharprime}{\kern0pt}a\ list\ {\isasymRightarrow}\ {\isacharprime}{\kern0pt}a\ list\ {\isasymRightarrow}\ {\isacharprime}{\kern0pt}a\ pregraph{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
@@ -84,19 +84,35 @@ It takes as input a list of $n$ vertices, as \texttt{prufer\_seq\_of\_tree} does
 \end{isabellebox}
 
 Then all trees can be enumerated by enumerating all possible Prüfer sequences and constructing the corresponding tree for each of them.
-The simple enumeration of all $n$-sequences has already been formalized in Isabelle and is used for this algorithm~\cite{Combinatorial_Enumeration_Algorithms-AFP}.
+The simple enumeration of all $n$-sequences is implemented in the List theory.
 
 \begin{isabellebox}
     \isacommand{definition}\isamarkupfalse%
     \ labeled{\isacharunderscore}{\kern0pt}tree{\isacharunderscore}{\kern0pt}enum\ {\isacharcolon}{\kern0pt}{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}{\isacharprime}{\kern0pt}a\ list\ {\isasymRightarrow}\ {\isacharprime}{\kern0pt}a\ pregraph\ list{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
-    \ \ {\isachardoublequoteopen}labeled{\isacharunderscore}{\kern0pt}tree{\isacharunderscore}{\kern0pt}enum\ verts\ {\isacharequal}{\kern0pt}\ map\ {\isacharparenleft}{\kern0pt}tree{\isacharunderscore}{\kern0pt}of{\isacharunderscore}{\kern0pt}prufer{\isacharunderscore}{\kern0pt}seq\ verts{\isacharparenright}{\kern0pt}\ {\isacharparenleft}{\kern0pt}n{\isacharunderscore}{\kern0pt}sequence{\isacharunderscore}{\kern0pt}enum\ verts\ {\isacharparenleft}{\kern0pt}length\ verts\ {\isacharminus}{\kern0pt}\ {\isadigit{2}}{\isacharparenright}{\kern0pt}{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}%
+    \ \ {\isachardoublequoteopen}labeled{\isacharunderscore}{\kern0pt}tree{\isacharunderscore}{\kern0pt}enum\ verts\ {\isacharequal}{\kern0pt}\ map\ {\isacharparenleft}{\kern0pt}tree{\isacharunderscore}{\kern0pt}of{\isacharunderscore}{\kern0pt}prufer{\isacharunderscore}{\kern0pt}seq\ verts{\isacharparenright}{\kern0pt}\ {\isacharparenleft}{\kern0pt}List{\isachardot}{\kern0pt}n{\isacharunderscore}{\kern0pt}lists\ {\isacharparenleft}{\kern0pt}length\ verts\ {\isacharminus}{\kern0pt}\ {\isadigit{2}}{\isacharparenright}{\kern0pt}\ verts{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}%
 \end{isabellebox}
 
+With this approach to enumeration, it also follows immediately that the number of labeled trees on $n$ vertices is equal to the number of $(n-2)$-sequences of vertices, that is $n^{n-2}$.
+This is known as Cayley's Formula:
+
+\begin{isabellebox}
+    \isacommand{lemma}\isamarkupfalse%
+    \ {\isacharparenleft}{\kern0pt}\isakeyword{in}\ valid{\isacharunderscore}{\kern0pt}verts{\isacharparenright}{\kern0pt}\ cayleys{\isacharunderscore}{\kern0pt}formula{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}card\ {\isacharparenleft}{\kern0pt}labeled{\isacharunderscore}{\kern0pt}trees\ {\isacharparenleft}{\kern0pt}set\ verts{\isacharparenright}{\kern0pt}{\isacharparenright}{\kern0pt}\ {\isacharequal}{\kern0pt}\ length\ verts\ {\isacharcircum}{\kern0pt}\ {\isacharparenleft}{\kern0pt}length\ verts\ {\isacharminus}{\kern0pt}\ {\isadigit{2}}{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}
+\end{isabellebox}
+
+With this number we can also determine the runtime of the algorithm.
+The $n^{n-2}$ Prüfer sequences can be enumerated in $O(n^{n-2})$ time with the implementation in the List theory.
+Assuming an efficient set implementation with $O(1)$ lookup and insertion, the construction of the tree from a Prüfer sequence can be done in $O(n^2)$ time.
+This mean all trees are generated in $O(n^{n-2} + n^{n-2} * n^2) = O(n^n)$ time.
+One could potentially improve the runtime of the algorithm by using a priority queue to keep track of the number of times a vertex appears in the Prüfer sequence.
+This would, however, result in a considerably more complex verification and is not done in this thesis.
 
 \section{Proof of correctness}\label{section:labeled_tree_enum_correct}
 
-To begin the formal verification of the algorithm a formal definition of trees is needed is Isabelle/HOL.
+To begin the formal verification of the algorithm a formal definition of trees is needed in Isabelle/HOL.
 We build upon an existing entry in the Archive of Formal Proofs by Edmonds \cite{Undirected_Graph_Theory-AFP} in which undirected graphs are formalized.
+There are other formalizations of graphs such as the one by Noschinski \cite{Graph_Theory-AFP}, but the definition of graphs is far more general and would thus complicate our proofs unnecessarily.
+Meanwhile, Edmonds' formalization targets exactly the setting of undirected simple graphs needed in this thesis.
 It contains standard definitions for undirected graphs, paths, connectivity and other useful definitions and lemmas.
 However, there are no definitions regarding trees and thus we extend the existing theory with the necessary definitions and lemmas.
 Most importantly, we define a tree as a finite, connected, undirected graph with no cycles.
@@ -117,9 +133,17 @@ Since this is clearly undesired in this setting we make an alternative definitio
     \ \ {\isachardoublequoteopen}is{\isacharunderscore}{\kern0pt}cycle{\isadigit{2}}\ xs\ {\isasymlongleftrightarrow}\ is{\isacharunderscore}{\kern0pt}cycle\ xs\ {\isasymand}\ distinct\ {\isacharparenleft}{\kern0pt}walk{\isacharunderscore}{\kern0pt}edges\ xs{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}
 \end{isabellebox}
 
-With this formal definition it can be shown that the Prüfer correspondence is indeed a one-to-one mapping from Prüfer to trees and thus the correctness of the algorithm.
+In addition, we define the set of labeled trees over a fixed set of vertices, which is the set to be enumerated by the algorithm.
 
-Here, and for the remainder of this chapter, we will always assume the elements of the vertices list given to the algorithm to be distinct.
+\begin{isabellebox}
+    \isacommand{definition}\isamarkupfalse%
+    \ labeled{\isacharunderscore}{\kern0pt}trees\ {\isacharcolon}{\kern0pt}{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}{\isacharprime}{\kern0pt}a\ set\ {\isasymRightarrow}\ {\isacharprime}{\kern0pt}a\ pregraph\ set{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
+    \ \ {\isachardoublequoteopen}labeled{\isacharunderscore}{\kern0pt}trees\ V\ {\isacharequal}{\kern0pt}\ {\isacharbraceleft}{\kern0pt}{\isacharparenleft}{\kern0pt}V{\isacharcomma}{\kern0pt}E{\isacharparenright}{\kern0pt}{\isacharbar}{\kern0pt}\ E{\isachardot}{\kern0pt}\ tree\ V\ E{\isacharbraceright}{\kern0pt}{\isachardoublequoteclose}%
+\end{isabellebox}
+
+With this formal definition it can be shown that the Prüfer correspondence is indeed a one-to-one mapping from Prüfer sequences to trees and thus the correctness of the algorithm.
+
+Here, and for the remainder of this chapter, we will always assume the elements of the vertex list given to the algorithm to be distinct.
 In addition we assume there to be at least two vertices as Prüfer sequences only exist for trees of size at least two.
 These assumptions are combined in the \texttt{valid\_verts} locale.
 
@@ -133,7 +157,7 @@ These assumptions are combined in the \texttt{valid\_verts} locale.
 
 First we show that the graph generated by \texttt{tree\_of\_prufer\_seq} is indeed a tree.
 By simple induction it can be proved that the graph produced is always connected as every added vertex is immediately connected with the rest of the graph.
-In addition, if the vertices list has $n$ elements the graph has $n$ vertices and $n-1$ edges which combined with the connectivity makes it a tree.
+In addition, if the vertex list has $n$ elements the graph has $n$ vertices and $n-1$ edges which combined with the connectivity makes it a tree.
 
 Next to show that the set of elements produced by the algorithm are all possible trees, it is necessary to prove that every tree has a Prüfer sequence.
 This is where the inverse function is useful.
@@ -146,27 +170,34 @@ That is, $\texttt{prufer\_seq\_of\_tree}$ produces a valid Prüfer sequence for 
 
 This requires one observation, namely that the number of times an element occurs in the Prüfer sequence is one less than its degree in the graph.
 This means that the vertices not in the Prüfer sequence are exactly the leaves of the tree.
-Thus the operations of finding the leaf with the smallest label and finding the smallest vertex not in the Prüfer sequence result in the same vertex.
+Thus, the operations of finding the leaf with the smallest label and finding the smallest vertex not in the Prüfer sequence result in the same vertex.
 This can be used to prove the above statement.
 
 This means that the algorithm generates all possible trees.
 
 \begin{isabellebox}
     \isacommand{theorem}\isamarkupfalse%
-    \ {\isacharparenleft}{\kern0pt}\isakeyword{in}\ valid{\isacharunderscore}{\kern0pt}verts{\isacharparenright}{\kern0pt}\ labeled{\isacharunderscore}{\kern0pt}tree{\isacharunderscore}{\kern0pt}enum{\isacharunderscore}{\kern0pt}correct{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}set\ {\isacharparenleft}{\kern0pt}labeled{\isacharunderscore}{\kern0pt}tree{\isacharunderscore}{\kern0pt}enum\ verts{\isacharparenright}{\kern0pt}\ {\isacharequal}{\kern0pt}\ labeled{\isacharunderscore}{\kern0pt}trees\ {\isacharparenleft}{\kern0pt}set\ verts{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}
+    \ {\isacharparenleft}{\kern0pt}\isakeyword{in}\ valid{\isacharunderscore}{\kern0pt}verts{\isacharparenright}{\kern0pt}\ {\isachardoublequoteopen}set\ {\isacharparenleft}{\kern0pt}labeled{\isacharunderscore}{\kern0pt}tree{\isacharunderscore}{\kern0pt}enum\ verts{\isacharparenright}{\kern0pt}\ {\isacharequal}{\kern0pt}\ labeled{\isacharunderscore}{\kern0pt}trees\isanewline
+    \ \ {\isacharparenleft}{\kern0pt}set\ verts{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}
 \end{isabellebox}
 
 The last step is to show that no tree is produced more than once, that is the injectivity of \texttt{tree\_of\_prufer\_seq}.
 This can be proved inductively on the length of the Prüfer sequences.
-Assume for the sake of contradiction that two distinct Prüfer sequences $s_1$ and $s_2$ produce the same tree $T$.
-Due to the observation above, finding the smallest vertex not in the Prüfer sequences $s_1$ and $s_2$ is the same as finding the leaf $T$ with the smallest label and so they are equal.
-Let this leaf be denoted by $b$.
-If $s_1$ and $s_2$ differ in their first element (say $a_1$ and $a_2$ respectively), the tree produced by $s_1$ contains an edge between $a_1$ and $b$ and the tree produced by $s_2$ contains an edge between $a_2$ and $b$.
-In the algorithm $b$ is then removed from the set of considered vertices which means these edges will not be added to the other trees.
+Let $s_1$ and $s_2$ be two different Prüfer sequences producing trees $T_1$ and $T_2$ respectively.
+We want to show that $T_1$ and $T_2$ are different.
+Let us only consider the case that $s_1$ and $s_2$ are of the same length as otherwise they clearly produce trees of different sizes.
+Assume for the sake of contradiction that $T_1 = T_2$.
+Then due to the observation made earlier, finding the smallest vertex not in the Prüfer sequences $s_1$ and $s_2$ is the same as finding the leaves in $T_1$ and $T_2$ with the smallest label and so they are equal.
+Let this leaf be denoted by $a$.
+If $s_1$ and $s_2$ differ in their first element, say $b_1$ and $b_2$ respectively, then $T_1$ contains an edge between $a$ and $b_1$ and $T_2$ contains an edge between $a$ and $b_2$.
+In the algorithm $a$ is then removed from the set of considered vertices and so no further edges containing $a$ will be added.
+Therefore, $T_1$ does not contain the edge from $a$ to $b_2$ and $T_2$ does not contain the edge from $a$ to $b_1$.
 That means the produced trees are not equal which contradicts the initial assumption.
-Thus all trees produced by the algorithm are distinct.
+
+In case $s_1$ and $s_2$ do not differ in their first element, they differ in some later position and we can use the inductive hypothesis to show the statement.
+Thus, all trees produced by the algorithm are distinct.
 
 \begin{isabellebox}
     \isacommand{theorem}\isamarkupfalse%
-    \ {\isacharparenleft}{\kern0pt}\isakeyword{in}\ valid{\isacharunderscore}{\kern0pt}verts{\isacharparenright}{\kern0pt}\ distinct{\isacharunderscore}{\kern0pt}labeld{\isacharunderscore}{\kern0pt}tree{\isacharunderscore}{\kern0pt}enum{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}distinct\ {\isacharparenleft}{\kern0pt}labeled{\isacharunderscore}{\kern0pt}tree{\isacharunderscore}{\kern0pt}enum\ verts{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}
+    \ {\isacharparenleft}{\kern0pt}\isakeyword{in}\ valid{\isacharunderscore}{\kern0pt}verts{\isacharparenright}{\kern0pt}\ {\isachardoublequoteopen}distinct\ {\isacharparenleft}{\kern0pt}labeled{\isacharunderscore}{\kern0pt}tree{\isacharunderscore}{\kern0pt}enum\ verts{\isacharparenright}{\kern0pt}{\isachardoublequoteclose}
 \end{isabellebox}

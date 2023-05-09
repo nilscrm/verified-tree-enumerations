@@ -7,7 +7,7 @@ This chapter tries to summarize some graph theoretic results that were formalize
 These are well suited to be reused in other projects.
 
 We already discussed the definition of trees as acyclic, connected graphs.
-We also prove the standard definition of leaves as vertices of degree 1.
+We also provide the standard definition of leaves as vertices of degree 1.
 When proving properties of trees it is often useful to prove them by induction on the number of vertices.
 To do this we show that removing a leaf from a tree results in another tree.
 To simplify proving properties on trees inductively we provide a custom induction rule.
@@ -29,7 +29,7 @@ With the additional assumptions in the inductive step, proofs of properties on t
 When proving that a graph is a tree, arguing about acyclicity is in many cases difficult as it can require one to argue about all possible paths in the graphs.
 Instead, like in Section \ref{section:labeled_tree_enum_correct}, we use the well-known fact that a connected graph with $n$ vertices and $n-1$ edges is a tree.
 This lemma turns out to require a fair bit of setup.
-First, we define a spanning tree of a graph $G$ to a subgraph of $G$ that is a tree and that contains all vertices of $G$.
+First, we define a spanning tree of a graph $G$ to be a subgraph of $G$ that is a tree and that contains all vertices of $G$.
 
 \begin{isabellebox}
     \isacommand{locale}\isamarkupfalse%
@@ -65,5 +65,12 @@ We prove this to be an equivalence relation and define connected components to b
 
 A couple of interesting properties of connected components that were needed for the project were proven as well.
 
-Additionally, There are dozens more lemmas for graphs, paths, connectivity, subgraphs, vertex degrees etc. which are not described in detail here.
+Additionally, there are dozens more lemmas for graphs, paths, connectivity, subgraphs, vertex degrees etc. formalized.
+One well known fact which might be of interest for other projects is the handshaking lemma which relates the number of edges with the sum of vertex degrees.
+
+\begin{isabellebox}
+    \isacommand{lemma}\isamarkupfalse%
+    \ {\isacharparenleft}{\kern0pt}\isakeyword{in}\ fin{\isacharunderscore}{\kern0pt}ulgraph{\isacharparenright}{\kern0pt}\ handshaking{\isacharcolon}{\kern0pt}\ {\isachardoublequoteopen}{\isacharparenleft}{\kern0pt}{\isasymSum}v{\isasymin}V{\isachardot}{\kern0pt}\ degree\ v{\isacharparenright}{\kern0pt}\ {\isacharequal}{\kern0pt}\ {\isadigit{2}}\ {\isacharasterisk}{\kern0pt}\ card\ E{\isachardoublequoteclose}
+\end{isabellebox}
+
 The interested reader is referred to the Archive of Formal Proofs entry for the full development.

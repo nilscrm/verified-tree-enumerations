@@ -1,8 +1,8 @@
-theory Labeled_Tree_Enumeration
-  imports Tree_Graph Combinatorial_Enumeration_Algorithms.n_Sequences
-begin
+section \<open>Enumeration of Labeled Trees\<close>
 
-subsection \<open>Definition\<close>
+theory Labeled_Tree_Enumeration
+  imports Tree_Graph
+begin
 
 definition labeled_trees :: "'a set \<Rightarrow> 'a pregraph set" where
   "labeled_trees V = {(V,E)| E. tree V E}"
@@ -12,19 +12,19 @@ subsection \<open>Algorithm\<close>
 text \<open>Prüfer sequence to tree\<close>
 
 definition prufer_sequences :: "'a list \<Rightarrow> 'a list set" where
-  "prufer_sequences verts = n_sequences (set verts) (length verts - 2)"
+  "prufer_sequences verts = {xs. length xs = length verts - 2 \<and> set xs \<subseteq> set verts}"
 
 fun tree_edges_of_prufer_seq :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a edge set" where
   "tree_edges_of_prufer_seq [u,v] [] = {{u,v}}"
-| "tree_edges_of_prufer_seq verts (a#seq) =
-    (case find (\<lambda>x. x \<notin> set (a#seq)) verts of
-      Some b \<Rightarrow> insert {a,b} (tree_edges_of_prufer_seq (remove1 b verts) seq))"
+| "tree_edges_of_prufer_seq verts (b#seq) =
+    (case find (\<lambda>x. x \<notin> set (b#seq)) verts of
+      Some a \<Rightarrow> insert {a,b} (tree_edges_of_prufer_seq (remove1 a verts) seq))"
 
 definition tree_of_prufer_seq :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a pregraph" where
   "tree_of_prufer_seq verts seq = (set verts, tree_edges_of_prufer_seq verts seq)"
 
 definition labeled_tree_enum :: "'a list \<Rightarrow> 'a pregraph list" where
-  "labeled_tree_enum verts = map (tree_of_prufer_seq verts) (n_sequence_enum verts (length verts - 2))"
+  "labeled_tree_enum verts = map (tree_of_prufer_seq verts) (List.n_lists (length verts - 2) verts)"
 
 
 subsection \<open>Correctness\<close>
@@ -45,8 +45,6 @@ fun prufer_seq_of_tree :: "'a list \<Rightarrow> 'a edge set \<Rightarrow> 'a li
     (if length verts \<le> 2 then []
     else (case find (tree.leaf E) verts of
       Some leaf \<Rightarrow> (THE v. ulgraph.vert_adj E leaf v) # prufer_seq_of_tree (remove1 leaf verts) (remove_vertex_edges leaf E)))"
-
-subsection \<open>Correctness\<close>
 
 locale valid_verts =
   fixes verts
@@ -74,29 +72,29 @@ qed
 
 lemma (in tree_of_prufer_seq_ctx) tree_edges_of_prufer_seq_induct':
   assumes "\<And>u v. P [u, v] []"
-    and "\<And>verts a seq b.
-            find (\<lambda>x. x \<notin> set (a # seq)) verts = Some b
-            \<Longrightarrow> b \<in> set verts \<Longrightarrow> b \<notin> set (a # seq) \<Longrightarrow> seq \<in> prufer_sequences (remove1 b verts)
-            \<Longrightarrow> tree_of_prufer_seq_ctx (remove1 b verts) seq \<Longrightarrow> P (remove1 b verts) seq \<Longrightarrow> P verts (a # seq)"
+    and "\<And>verts b seq a.
+            find (\<lambda>x. x \<notin> set (b # seq)) verts = Some a
+            \<Longrightarrow> a \<in> set verts \<Longrightarrow> a \<notin> set (b # seq) \<Longrightarrow> seq \<in> prufer_sequences (remove1 a verts)
+            \<Longrightarrow> tree_of_prufer_seq_ctx (remove1 a verts) seq \<Longrightarrow> P (remove1 a verts) seq \<Longrightarrow> P verts (b # seq)"
   shows "P verts seq"
   using tree_of_prufer_seq_ctx_axioms
 proof (induction verts seq rule: tree_edges_of_prufer_seq.induct)
-  case (2 verts a seq)
-  then interpret tree_of_prufer_seq_ctx verts "a # seq" by simp
-  obtain b where b_find: "find (\<lambda>x. x \<notin> set (a # seq)) verts = Some b"
-    using length_gt_find_not_in_ys[of "a#seq" verts] distinct_verts prufer_seq
-    unfolding prufer_sequences_def n_sequences_def by fastforce
-  then have b_in_verts: "b \<in> set verts" by (simp add: find_in_list)
-  have b_not_in_seq: "b \<notin> set (a#seq)" using b_find by (metis find_Some_iff)
-  have prufer_seq': "seq \<in> prufer_sequences (remove1 b verts)"
-    using prufer_seq b_in_verts set_remove1_eq length_verts b_not_in_seq distinct_verts
-    unfolding prufer_sequences_def n_sequences_def by (auto simp: length_remove1)
-  have "length verts \<ge> 3" using prufer_seq unfolding prufer_sequences_def n_sequences_def by auto
-  then have "length (remove1 b verts) \<ge> 2" by (auto simp: length_remove1)
-  then have valid_verts_seq': "tree_of_prufer_seq_ctx (remove1 b verts) seq"
+  case (2 verts b seq)
+  then interpret tree_of_prufer_seq_ctx verts "b # seq" by simp
+  obtain a where a_find: "find (\<lambda>x. x \<notin> set (b # seq)) verts = Some a"
+    using length_gt_find_not_in_ys[of "b#seq" verts] distinct_verts prufer_seq
+    unfolding prufer_sequences_def by fastforce
+  then have a_in_verts: "a \<in> set verts" by (simp add: find_in_list)
+  have a_not_in_seq: "a \<notin> set (b#seq)" using a_find by (metis find_Some_iff)
+  have prufer_seq': "seq \<in> prufer_sequences (remove1 a verts)"
+    using prufer_seq a_in_verts set_remove1_eq length_verts a_not_in_seq distinct_verts
+    unfolding prufer_sequences_def by (auto simp: length_remove1)
+  have "length verts \<ge> 3" using prufer_seq unfolding prufer_sequences_def by auto
+  then have "length (remove1 a verts) \<ge> 2" by (auto simp: length_remove1)
+  then have valid_verts_seq': "tree_of_prufer_seq_ctx (remove1 a verts) seq"
     using prufer_seq' distinct_verts by unfold_locales auto
-  then show ?case using b_find assms(2) b_in_verts b_not_in_seq prufer_seq' 2(1) by blast
-qed (auto simp: assms tree_of_prufer_seq_ctx_def tree_of_prufer_seq_ctx_axioms_def valid_verts_def prufer_sequences_def n_sequences_def)
+  then show ?case using a_find assms(2) a_in_verts a_not_in_seq prufer_seq' 2(1) by blast
+qed (auto simp: assms tree_of_prufer_seq_ctx_def tree_of_prufer_seq_ctx_axioms_def valid_verts_def prufer_sequences_def)
 
 lemma (in tree_of_prufer_seq_ctx) tree_edges_of_prufer_seq_tree:
   shows "tree (set verts) (tree_edges_of_prufer_seq verts seq)"
@@ -105,24 +103,30 @@ proof (induction rule: tree_edges_of_prufer_seq_induct')
   case (1 u v)
   then show ?case using tree2 unfolding tree_of_prufer_seq_ctx_def valid_verts_def by fastforce
 next
-  case (2 verts a seq b)
-  interpret tree_of_prufer_seq_ctx verts "a # seq" using 2(7) .
-  interpret tree "set (remove1 b verts)" "tree_edges_of_prufer_seq (remove1 b verts) seq"
+  case (2 verts b seq a)
+  interpret tree_of_prufer_seq_ctx verts "b # seq" using 2(7) .
+  interpret tree "set (remove1 a verts)" "tree_edges_of_prufer_seq (remove1 a verts) seq"
     using 2(5,6) by simp
-  have b_not_in_verts': "b \<notin> set (remove1 b verts)" using distinct_verts by simp
+  have a_not_in_verts': "a \<notin> set (remove1 a verts)" using distinct_verts by simp
   have "a \<noteq> b" using 2 by auto
-  then have a_in_verts': "a \<in> set (remove1 b verts)" using prufer_seq unfolding prufer_sequences_def n_sequences_def by auto
-  then show ?case using b_not_in_verts' add_vertex_tree[OF b_not_in_verts' a_in_verts'] 2(1,2) distinct_verts
+  then have b_in_verts': "b \<in> set (remove1 a verts)" using prufer_seq unfolding prufer_sequences_def by auto
+  then show ?case using a_not_in_verts' add_vertex_tree[OF a_not_in_verts' b_in_verts'] 2(1,2) distinct_verts
     by (auto simp: insert_absorb insert_commute)
 qed
 
 lemma (in tree_of_prufer_seq_ctx) tree_of_prufer_seq_tree: "(V,E) = tree_of_prufer_seq verts seq \<Longrightarrow> tree V E"
   unfolding tree_of_prufer_seq_def using tree_edges_of_prufer_seq_tree by auto
 
-lemma (in valid_verts) labeled_tree_enum_trees: "(V,E) \<in> set (labeled_tree_enum verts) \<Longrightarrow> tree V E"
-  using tree_of_prufer_seq_ctx.tree_of_prufer_seq_tree valid_verts_axioms n_sequence_enum_correct
-  unfolding tree_of_prufer_seq_ctx_def tree_of_prufer_seq_ctx_axioms_def labeled_tree_enum_def prufer_sequences_def
-  by fastforce
+lemma (in valid_verts) labeled_tree_enum_trees:
+  assumes VE_in_labeled_tree_enum: "(V,E) \<in> set (labeled_tree_enum verts)"
+  shows "tree V E"
+proof-
+  obtain seq where "seq \<in> set (List.n_lists (length verts - 2) verts)" and tree_of_seq: "tree_of_prufer_seq verts seq = (V,E)"
+    using VE_in_labeled_tree_enum unfolding labeled_tree_enum_def by auto
+  then interpret tree_of_prufer_seq_ctx verts seq
+    using List.set_n_lists by (unfold_locales) (auto simp: prufer_sequences_def)
+  show ?thesis using tree_of_prufer_seq_tree using tree_of_seq by simp
+qed
 
 subsection \<open>Totality\<close>
 
@@ -192,7 +196,7 @@ next
 qed
 
 lemma prufer_seq_of_tree_prufer_seq: "prufer_seq_of_tree verts E \<in> prufer_sequences verts"
-  using prufer_seq_of_tree_wf length_prufer_seq_of_tree unfolding prufer_sequences_def n_sequences_def by blast
+  using prufer_seq_of_tree_wf length_prufer_seq_of_tree unfolding prufer_sequences_def by blast
 
 lemma count_list_prufer_seq_degree: "v \<in> set verts \<Longrightarrow> Suc (count_list (prufer_seq_of_tree verts E) v) = degree v"
   using prufer_seq_of_tree_context_axioms
@@ -250,14 +254,14 @@ next
     by (metis (no_types, lifting) find_cong)
   then have "tree_edges_of_prufer_seq verts (prufer_seq_of_tree verts E)
     = insert {The (ctx.vert_adj l), l} (tree_edges_of_prufer_seq (remove1 l verts) (prufer_seq_of_tree (remove1 l verts) (remove_vertex_edges l E)))"
-    using 2 by simp
+    using 2 by auto
   also have "\<dots> = E" using 2 ctx.degree_1_edge_partition unfolding remove_vertex_edges_def incident_def ctx.leaf_def by simp
   finally show ?case .
 qed
 
 lemma tree_in_labeled_tree_enum: "(set verts, E) \<in> set (labeled_tree_enum verts)"
-  using prufer_seq_of_tree_prufer_seq tree_edges_of_prufer_seq_of_tree n_sequence_enum_correct
-  unfolding labeled_tree_enum_def tree_of_prufer_seq_def prufer_sequences_def by fastforce 
+  using prufer_seq_of_tree_prufer_seq tree_edges_of_prufer_seq_of_tree List.set_n_lists
+    unfolding prufer_sequences_def labeled_tree_enum_def tree_of_prufer_seq_def by fastforce
 
 end
 
@@ -280,19 +284,19 @@ proof (induction rule: tree_edges_of_prufer_seq_induct')
   interpret tree "{u,w}" "{{u,w}}" using tree_edges_of_prufer_seq_tree by simp
   show ?case using 1(1) by (auto simp add: incident_edges_def incident_def Collect_conv_if)
 next
-  case (2 verts a seq b)
-  interpret tree_of_prufer_seq_ctx verts "a # seq" using 2(8) .
-  interpret tree "set verts" "tree_edges_of_prufer_seq verts (a#seq)"
+  case (2 verts b seq a)
+  interpret tree_of_prufer_seq_ctx verts "b # seq" using 2(8) .
+  interpret tree "set verts" "tree_edges_of_prufer_seq verts (b#seq)"
     using tree_edges_of_prufer_seq_tree by simp
-  interpret ctx': tree_of_prufer_seq_ctx "remove1 b verts" seq using 2(5) .
-  interpret T': tree "set (remove1 b verts)" "tree_edges_of_prufer_seq (remove1 b verts) seq"
+  interpret ctx': tree_of_prufer_seq_ctx "remove1 a verts" seq using 2(5) .
+  interpret T': tree "set (remove1 a verts)" "tree_edges_of_prufer_seq (remove1 a verts) seq"
     using ctx'.tree_edges_of_prufer_seq_tree by simp
   show ?case
-  proof (cases "v = a")
+  proof (cases "v = b")
     case True
-    have ab_not_in_T': "{a, b} \<notin> tree_edges_of_prufer_seq (remove1 b verts) seq"
-      using T'.wellformed_alt_snd distinct_verts by auto
-    have "incident_edges v = insert {a,b} {e \<in> tree_edges_of_prufer_seq (remove1 b verts) seq. v \<in> e}"
+    have ab_not_in_T': "{a, b} \<notin> tree_edges_of_prufer_seq (remove1 a verts) seq"
+      using T'.wellformed_alt_snd distinct_verts by (auto, metis doubleton_eq_iff)
+    have "incident_edges v = insert {a,b} {e \<in> tree_edges_of_prufer_seq (remove1 a verts) seq. v \<in> e}"
       unfolding incident_edges_def incident_def using 2(1) True by auto
     then have "degree v = Suc (T'.degree v)"
       unfolding T'.alt_degree_def alt_degree_def T'.incident_edges_def incident_def
@@ -301,16 +305,16 @@ next
   next
     case False
     then show ?thesis
-    proof (cases "v = b")
+    proof (cases "v = a")
       case True
-      also have "incident_edges b = {{a,b}}" unfolding incident_edges_def incident_def
+      also have "incident_edges a = {{a,b}}" unfolding incident_edges_def incident_def
         using 2(1) T'.wellformed distinct_verts by auto
       then show ?thesis unfolding alt_degree_def True using 2(3) by auto
     next
       case False
       then have "incident_edges v = T'.incident_edges v"
-        unfolding incident_edges_def T'.incident_edges_def incident_def using 2(1) \<open>v \<noteq> a\<close> by auto
-      then show ?thesis using False \<open>v \<noteq> a\<close> 2 unfolding alt_degree_def by simp
+        unfolding incident_edges_def T'.incident_edges_def incident_def using 2(1) \<open>v \<noteq> b\<close> by auto
+      then show ?thesis using False \<open>v \<noteq> b\<close> 2 unfolding alt_degree_def by simp
     qed
   qed
 qed
@@ -331,48 +335,57 @@ proof
   assume prufer_seq2: "seq2 \<in> prufer_sequences verts"
   assume trees_eq: "tree_edges_of_prufer_seq verts seq1 = tree_edges_of_prufer_seq verts seq2"
   interpret tree_of_prufer_seq_ctx verts seq1 using prufer_seq1 by unfold_locales simp
-  have length_eq: "length seq1 = length seq2" using prufer_seq1 prufer_seq2 unfolding prufer_sequences_def n_sequences_def by simp
+  have length_eq: "length seq1 = length seq2" using prufer_seq1 prufer_seq2 unfolding prufer_sequences_def by simp
   show "seq1 = seq2"
     using prufer_seq1 prufer_seq2 trees_eq length_eq tree_of_prufer_seq_ctx_axioms
   proof (induction arbitrary: seq2 rule: tree_edges_of_prufer_seq_induct')
     case (1 u v)
     then show ?case by simp
   next
-    case (2 verts a seq b)
-    then interpret ctx1: tree_of_prufer_seq_ctx verts "a # seq" by simp
+    case (2 verts b seq a)
+    then interpret ctx1: tree_of_prufer_seq_ctx verts "b # seq" by simp
     interpret ctx2: tree_of_prufer_seq_ctx verts seq2 using 2 by unfold_locales blast
-    obtain a' seq2' where seq2: "seq2 = a' # seq2'" using 2(10) by (metis length_Suc_conv)
-    then have "find (\<lambda>x. x \<notin> set seq2) verts = Some b"
+    obtain b' seq2' where seq2: "seq2 = b' # seq2'" using 2(10) by (metis length_Suc_conv)
+    then have "find (\<lambda>x. x \<notin> set seq2) verts = Some a"
       using ctx2.notin_prufer_seq_iff_leaf 2(9) 2(1) ctx1.notin_prufer_seq_iff_leaf[symmetric] find_cong by force
-    then have edges_eq: "insert {a, b} (tree_edges_of_prufer_seq (remove1 b verts) seq) = insert {a', b} (tree_edges_of_prufer_seq (remove1 b verts) seq2')"
+    then have edges_eq: "insert {a, b} (tree_edges_of_prufer_seq (remove1 a verts) seq)
+        = insert {a, b'} (tree_edges_of_prufer_seq (remove1 a verts) seq2')"
       using 2 seq2 by simp
-    interpret ctx1': tree_of_prufer_seq_ctx "remove1 b verts" seq using 2(5) .
-    interpret T1: tree "set (remove1 b verts)" "tree_edges_of_prufer_seq (remove1 b verts) seq"
+    interpret ctx1': tree_of_prufer_seq_ctx "remove1 a verts" seq using 2(5) .
+    interpret T1: tree "set (remove1 a verts)" "tree_edges_of_prufer_seq (remove1 a verts) seq"
       using ctx1'.tree_edges_of_prufer_seq_tree by blast
-    have "b \<notin> set seq2'" using seq2 2 ctx1.notin_prufer_seq_iff_leaf ctx2.notin_prufer_seq_iff_leaf by auto
-    then interpret ctx2': tree_of_prufer_seq_ctx "remove1 b verts" seq2'
+    have "a \<notin> set seq2'" using seq2 2 ctx1.notin_prufer_seq_iff_leaf ctx2.notin_prufer_seq_iff_leaf by auto
+    then interpret ctx2': tree_of_prufer_seq_ctx "remove1 a verts" seq2'
       using seq2 2(8) 2(2) ctx1.distinct_verts
-      by unfold_locales (auto simp: length_remove1 prufer_sequences_def n_sequences_def)
-    interpret T2: tree "set (remove1 b verts)" "tree_edges_of_prufer_seq (remove1 b verts) seq2'"
+      by unfold_locales (auto simp: length_remove1 prufer_sequences_def)
+    interpret T2: tree "set (remove1 a verts)" "tree_edges_of_prufer_seq (remove1 a verts) seq2'"
       using ctx2'.tree_edges_of_prufer_seq_tree by blast
 
-    have b_notin_verts': "b \<notin> set (remove1 b verts)" using ctx1.distinct_verts by simp
-    then have a'b_notin_edges: "{a',b} \<notin> tree_edges_of_prufer_seq (remove1 b verts) seq" using T1.wellformed by blast
-    then have "a = a'" using edges_eq by (metis doubleton_eq_iff insert_iff)
+    have a_notin_verts': "a \<notin> set (remove1 a verts)" using ctx1.distinct_verts by simp
+    then have ab'_notin_edges: "{a,b'} \<notin> tree_edges_of_prufer_seq (remove1 a verts) seq" using T1.wellformed by blast
+    then have "b = b'" using edges_eq by (metis doubleton_eq_iff insert_iff)
 
-    have "{a,b} \<notin> tree_edges_of_prufer_seq (remove1 b verts) seq2'" using T2.wellformed b_notin_verts' by blast
-    then have "(tree_edges_of_prufer_seq (remove1 b verts) seq) = tree_edges_of_prufer_seq (remove1 b verts) seq2'"
-      using edges_eq a'b_notin_edges
-      by (simp add: \<open>a = a'\<close> insert_eq_iff)
+    have "{a,b} \<notin> tree_edges_of_prufer_seq (remove1 a verts) seq2'" using T2.wellformed a_notin_verts' by blast
+    then have "(tree_edges_of_prufer_seq (remove1 a verts) seq) = tree_edges_of_prufer_seq (remove1 a verts) seq2'"
+      using edges_eq ab'_notin_edges
+      by (simp add: \<open>b = b'\<close> insert_eq_iff)
     then have "seq = seq2'" using "2.IH"[of seq2'] ctx1'.prufer_seq ctx2'.prufer_seq 2(10) ctx1'.tree_of_prufer_seq_ctx_axioms
       unfolding seq2 by simp
-    then show ?case using \<open>a = a'\<close> seq2 by simp
+    then show ?case using \<open>b = b'\<close> seq2 by simp
   qed
 qed
 
 theorem (in valid_verts) distinct_labeld_tree_enum: "distinct (labeled_tree_enum verts)"
-  using inj_tree_edges_of_prufer_seq n_sequence_enum_distinct distinct_verts
+  using inj_tree_edges_of_prufer_seq distinct_n_lists distinct_verts
   unfolding  labeled_tree_enum_def prufer_sequences_def tree_of_prufer_seq_def
-  by (auto simp add: distinct_map n_sequence_enum_correct inj_on_def)
+  by (auto simp add: distinct_map set_n_lists inj_on_def)
+
+lemma (in valid_verts) cayleys_formula: "card (labeled_trees (set verts)) = length verts ^ (length verts - 2)"
+proof-
+  have "card (labeled_trees (set verts)) = length (labeled_tree_enum verts)"
+    using distinct_labeld_tree_enum labeled_tree_enum_correct distinct_card by fastforce
+  also have "\<dots> = length verts ^ (length verts - 2)" unfolding labeled_tree_enum_def using length_n_lists by auto
+  finally show ?thesis .
+qed
 
 end
